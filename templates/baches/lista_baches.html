@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Listado de baches - Pozos Ya{% endblock %}
+
+{% block content %}
+<h2>Listado de baches reportados</h2>
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Ubicación</th>
+            <th>Barrio</th>
+            <th>Severidad</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for b in baches %}
+        <tr>
+            <td>
+                {{ b.titulo }}
+                {% if user.is_authenticated and b.vecino == user %}
+                    (tu reclamo)
+                {% endif %}
+            </td>
+            <td>{{ b.calle }} {{ b.altura }}</td>
+            <td>{{ b.barrio }}</td>
+            <td>{{ b.get_severidad_display }}</td>
+            <td>{{ b.get_estado_display }}</td>
+            <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

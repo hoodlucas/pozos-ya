@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Pozos Ya{% endblock %}</title>
+
+    <!-- Leaflet: estilos y script para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+</head>
+<body>
+<header>
+    <h1>Pozos Ya</h1>
+    <p>Reclamos de baches en Lomas de Zamora</p>
+        <nav>
+            <a href="{% url 'lista_baches' %}">Listado</a> |
+            <a href="{% url 'crear_bache' %}">Reportar bache</a>
+
+            {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                    | <a href="{% url 'panel_municipio' %}">Panel municipio</a>
+                {% endif %}
+                | Hola, {{ user.username }} |
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            {% else %}
+                | <a href="{% url 'login' %}">Iniciar sesión</a>
+            {% endif %}
+        </nav>
+    <hr>
+</header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

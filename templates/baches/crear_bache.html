@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportar bache - Pozos Ya{% endblock %}
+
+{% block content %}
+<h2>Reportar un nuevo bache</h2>
+
+<p>Hacé clic en el mapa para marcar dónde está el bache. Después completá los datos y guardá.</p>
+
+<div id="map" style="height: 400px; margin-bottom: 20px;"></div>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+</form>
+
+<script>
+    const map = L.map('map').setView([-34.76, -58.4], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = null;
+
+    async function reverseGeocode(lat, lng) {
+        // Endpoint público de Nominatim (OSM)
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    // Desde frontend no podés garantizar el User-Agent real,
+                    // pero esto ayuda a no ir "anónimo"
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.address || null;
+        } catch (err) {
+            console.log("Reverse geocoding error:", err);
+            return null;
+        }
+    }
+
+    async function onMapClick(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        // Guardar coords en hidden inputs
+        const latInput = document.getElementById('id_latitud');
+        const lngInput = document.getElementById('id_longitud');
+        if (latInput && lngInput) {
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+        }
+
+        // Buscar dirección y autocompletar
+        const address = await reverseGeocode(lat, lng);
+        if (!address) return;
+
+        // Inputs del formulario
+        const calleInput = document.getElementById('id_calle');
+        const alturaInput = document.getElementById('id_altura');
+        const barrioSelect = document.getElementById('id_barrio');
+
+        // Nominatim no siempre trae todo, por eso usamos "fallbacks"
+        const calle = address.road || address.pedestrian || address.path || '';
+        const altura = address.house_number || '';
+        const barrio = address.suburb || address.neighbourhood || address.city_district || '';
+
+        if (calleInput && calle) calleInput.value = calle;
+        if (alturaInput && altura) alturaInput.value = altura;
+        if (barrioInput && barrio) barrioInput.value = barrio;
+    }
+
+    map.on('click', onMapClick);
+</script>
+
+
+{% endblock %}
