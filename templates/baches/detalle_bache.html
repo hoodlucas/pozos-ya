@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ bache.titulo }} - Pozos Ya{% endblock %}
+
+{% block content %}
+<h2>{{ bache.titulo }}</h2>
+
+<p><strong>Ubicación:</strong> {{ bache.calle }} {{ bache.altura }}{% if bache.barrio %}, {{ bache.barrio }}{% endif %}</p>
+<p><strong>Severidad:</strong> {{ bache.get_severidad_display }}</p>
+<p><strong>Estado:</strong> {{ bache.get_estado_display }}</p>
+<p><strong>Reportado por:</strong>
+    {% if bache.vecino %}
+        {{ bache.vecino.username }}
+    {% else %}
+        Anónimo
+    {% endif %}
+</p>
+<p><strong>Fecha:</strong> {{ bache.fecha_creacion|date:"d/m/Y H:i" }}</p>
+
+{% if bache.descripcion %}
+    <p><strong>Descripción:</strong> {{ bache.descripcion }}</p>
+{% endif %}
+
+{% if bache.imagen %}
+    <div style="margin-top: 12px;">
+        <img src="{{ bache.imagen.url }}" style="max-width: 600px; width: 100%; border-radius: 8px;">
+    </div>
+{% else %}
+    <p>No hay imagen cargada.</p>
+{% endif %}
+
+<hr>
+<a href="{% url 'lista_baches' %}">Volver al listado</a>
+{% endblock %}

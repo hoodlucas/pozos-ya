@@ -1,5 +1,16 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Turf para validar punto dentro del polígono -->
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
 {% block title %}Reportar bache - Pozos Ya{% endblock %}
 
 {% block content %}
@@ -9,11 +20,13 @@
 
 <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Guardar</button>
 </form>
+
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
     const map = L.map('map').setView([-34.76, -58.4], 13);

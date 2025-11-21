@@ -31,6 +31,8 @@ class Bache(models.Model):
     latitud = models.FloatField(null=True, blank=True)
     longitud = models.FloatField(null=True, blank=True)
 
+    imagen = models.ImageField(upload_to="baches/", null=True, blank=True)
+    
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

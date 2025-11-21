@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path
 from baches import views as baches_views
 from django.contrib.auth import views as auth_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -29,4 +31,10 @@ urlpatterns = [
     # LOGIN / LOGOUT
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),   
     path('logout/', baches_views.logout_view, name='logout'),
+    path("bache/<int:pk>/", baches_views.detalle_bache, name="detalle_bache"),
+    
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

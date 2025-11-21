@@ -23,7 +23,7 @@ class BacheForm(forms.ModelForm):
         model = Bache
         fields = [
             'titulo', 'descripcion', 'calle', 'altura',
-            'barrio', 'severidad', 'latitud', 'longitud'
+            'barrio', 'severidad', 'latitud', 'longitud', 'imagen',
         ]
         widgets = {
             'latitud': forms.HiddenInput(),
