@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Notificaciones - Pozos Ya{% endblock %}
+
+{% block content %}
+<h2>Mis notificaciones</h2>
+
+{% if no_leidas > 0 %}
+    <p>Tenés {{ no_leidas }} notificación/es sin leer.</p>
+{% endif %}
+
+{% if notificaciones %}
+    <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+        <th>Fecha</th>
+        <th>Mensaje</th>
+        <th>Estado</th>
+        <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for n in notificaciones %}
+        <tr {% if not n.leida %}style="font-weight:bold;"{% endif %}>
+        <td>{{ n.fecha|date:"d/m/Y H:i" }}</td>
+        <td>{{ n.mensaje }}</td>
+        <td>
+            {% if n.leida %}Leída{% else %}No leída{% endif %}
+        </td>
+        <td>
+            <a href="{% url 'marcar_notificacion_leida' n.id %}">
+            Ver reclamo
+            </a>
+        </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+{% else %}
+    <p>No tenés notificaciones todavía.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,60 +1,122 @@
-{% extends 'base.html' %}
-
-{% block title %}Panel Municipio - Pozos Ya{% endblock %}
+{# panel_municipio.html #}
+{% extends "base.html" %}
+{% block title %}Panel Municipio{% endblock %}
 
 {% block content %}
-<h2>Panel del Municipio</h2>
-<p>Acá podés ver todos los baches reportados y actualizar su estado.</p>
+<h2>Panel Municipio</h2>
 
-<table border="1" cellpadding="5" cellspacing="0">
+<!-- FORM DE FILTROS (GET) -->
+<form method="get" style="margin-bottom: 15px;">
+    <label>Estado:</label>
+    <select name="estado">
+        <option value="">Todos</option>
+        {% for val, label in ESTADO_CHOICES %}
+            <option value="{{ val }}" {% if val == estado_actual %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Severidad:</label>
+    <select name="severidad">
+        <option value="">Todas</option>
+        {% for val, label in SEVERIDAD_CHOICES %}
+            <option value="{{ val }}" {% if val == severidad_actual %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Barrio:</label>
+    <select name="barrio">
+        <option value="">Todos</option>
+        {% for b in barrios %}
+            <option value="{{ b }}" {% if b == barrio_actual %}selected{% endif %}>
+                {{ b }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="q" placeholder="Buscar título/calle" value="{{ q_actual }}">
+
+    <button type="submit">Filtrar</button>
+    <a href="{% url 'panel_municipio' %}">Limpiar</a>
+</form>
+
+<!-- DASHBOARD -->
+<div style="display:flex; gap:12px; margin:10px 0;">
+  <div style="padding:8px 12px; border:1px solid #ccc;">
+    Total: <strong>{{ total }}</strong>
+  </div>
+  <div style="padding:8px 12px; border:1px solid #ccc;">
+    Nuevos: <strong>{{ nuevos }}</strong>
+  </div>
+  <div style="padding:8px 12px; border:1px solid #ccc;">
+    En gestión: <strong>{{ en_gestion }}</strong>
+  </div>
+  <div style="padding:8px 12px; border:1px solid #ccc;">
+    Resueltos: <strong>{{ resueltos }}</strong>
+  </div>
+</div>
+
+<!-- FORM ÚNICO PARA ACTUALIZAR EN MASA (POST) -->
+<form method="post">
+  {% csrf_token %}
+
+  <table>
     <thead>
-        <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Ubicación</th>
-            <th>Barrio</th>
-            <th>Vecino</th>
-            <th>Severidad</th>
-            <th>Estado actual</th>
-            <th>Actualizar estado</th>
-        </tr>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Ubicación</th>
+        <th>Severidad</th>
+        <th>Estado</th>
+        <th>Fecha creación</th>
+        <th>Fecha resolución</th>
+        <th>Comentario municipio</th>
+        <th>Votos</th>
+      </tr>
     </thead>
     <tbody>
-    {% for b in baches %}
-        <tr>
-            <td>{{ b.id }}</td>
-            <td>{{ b.titulo }}</td>
-            <td>{{ b.calle }} {{ b.altura }}</td>
-            <td>{{ b.barrio }}</td>
-            <td>
-                {% if b.vecino %}
-                    {{ b.vecino.first_name }} {{ b.vecino.last_name }} ({{ b.vecino.username }})
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td>{{ b.get_severidad_display }}</td>
-            <td>{{ b.get_estado_display }}</td>
-            <td>
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="bache_id" value="{{ b.id }}">
-                    <select name="estado">
-                        {% for value, label in ESTADO_CHOICES %}
-                            <option value="{{ value }}" {% if value == b.estado %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit">Guardar</button>
-                </form>
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td colspan="8">Todavía no hay baches cargados.</td>
-        </tr>
-    {% endfor %}
+      {% for b in baches %}
+      <tr>
+        <td>{{ b.id }}</td>
+        <td>{{ b.titulo }}</td>
+        <td>{{ b.calle }} {{ b.altura }} ({{ b.barrio }})</td>
+        <td>{{ b.get_severidad_display }}</td>
+
+        <td>
+          <select name="estado_{{ b.id }}">
+            {% for val, label in ESTADO_CHOICES %}
+              <option value="{{ val }}" {% if b.estado == val %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </td>
+
+        <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+        <td>
+          {% if b.fecha_resolucion %}
+            {{ b.fecha_resolucion|date:"d/m/Y H:i" }}
+          {% else %}-{% endif %}
+        </td>
+
+        <td>
+          <textarea name="comentario_{{ b.id }}" rows="2" cols="25">{{ b.comentario_municipio }}</textarea>
+        </td>
+        <td>{{ b.votos_count }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+
+  <button type="submit">Actualizar todos</button>
+</form>
+
+
+<a href="{% url 'exportar_baches_csv' %}">
+  Descargar CSV
+</a>
+
 {% endblock %}

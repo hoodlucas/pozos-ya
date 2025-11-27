@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Registrarse - Pozos Ya{% endblock %}
+
+{% block content %}
+<h2>Crear cuenta de vecino</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Registrarme</button>
+</form>
+
+<p style="margin-top:10px;">
+    ¿Ya tenés cuenta? <a href="{% url 'login' %}">Iniciá sesión</a>
+</p>
+{% endblock %}

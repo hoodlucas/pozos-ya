@@ -1,5 +1,8 @@
 from django import forms
 from .models import Bache
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import Perfil
 
 BARRIOS_LOMAS = [
     ("", "Seleccionar barrio..."),
@@ -13,6 +16,7 @@ BARRIOS_LOMAS = [
     ("Villa Fiorito", "Villa Fiorito"),
     ("Parque Barón", "Parque Barón"),
     ("Santa Catalina", "Santa Catalina"),
+    ("San Jose", "San Jose")
     # si querés agregamos más después
 ]
 
@@ -29,3 +33,36 @@ class BacheForm(forms.ModelForm):
             'latitud': forms.HiddenInput(),
             'longitud': forms.HiddenInput(),
         }
+
+
+
+
+class RegistroForm(UserCreationForm):
+    first_name = forms.CharField(label="Nombre", max_length=150, required=True)
+    last_name = forms.CharField(label="Apellido", max_length=150, required=True)
+    email = forms.EmailField(label="Email", required=False)
+
+    dni = forms.CharField(label="DNI", max_length=15, required=False)
+    fecha_nacimiento = forms.DateField(
+        label="Fecha de nacimiento",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"})
+    )
+    telefono = forms.CharField(label="Teléfono", max_length=30, required=False)
+    domicilio = forms.CharField(label="Domicilio", max_length=200, required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password1",
+            "password2",
+            "dni",
+            "fecha_nacimiento",
+            "telefono",
+            "domicilio",
+        ]
+

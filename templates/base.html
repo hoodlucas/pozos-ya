@@ -2,36 +2,57 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'baches/css/styles.css' %}">
     <title>{% block title %}Pozos Ya{% endblock %}</title>
 
-    <!-- Leaflet: estilos y script para el mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
+
 <header>
-    <h1>Pozos Ya</h1>
-    <p>Reclamos de baches en Lomas de Zamora</p>
+    <div class="header-wrap">
+        <div class="brand">
+            <a href="/" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px;">
+                <img src="{% static 'baches/img/logo.jpg' %}" alt="Logo de Lomas de Zamora" class="logo-lomas">
+                
+                <div class="brand-text-wrap">
+                    <h1>Pozos Ya</h1>
+                    <small>Reclamos en Lomas de Zamora</small>
+                </div>
+            </a>
+        </div>
+
         <nav>
-            <a href="{% url 'lista_baches' %}">Listado</a> |
-            <a href="{% url 'crear_bache' %}">Reportar bache</a>
+            <a href="{% url 'lista_baches' %}">Listado</a>
+            <a href="{% url 'crear_bache' %}">Reportar</a>
 
             {% if user.is_authenticated %}
-                {% if user.is_staff %}
-                    | <a href="{% url 'panel_municipio' %}">Panel municipio</a>
+                {% if user.perfil and user.perfil.rol == "municipio" %}
+                    <a href="{% url 'panel_municipio' %}" class="highlight">Panel</a>
                 {% endif %}
-                | Hola, {{ user.username }} |
-                <a href="{% url 'logout' %}">Cerrar sesión</a>
+                
+                <a href="{% url 'mis_notificaciones' %}">
+                    Notificaciones {% if notifs_no_leidas %}<span class="badge">{{ notifs_no_leidas }}</span>{% endif %}
+                </a>
+                <a href="{% url 'mis_baches' %}">Mis reclamos</a>
+                <a href="{% url 'logout' %}">Salir</a>
             {% else %}
-                | <a href="{% url 'login' %}">Iniciar sesión</a>
+                <a href="{% url 'login' %}">Entrar</a>
+                <a href="{% url 'registro' %}">Registrarse</a>
             {% endif %}
         </nav>
-    <hr>
+    </div>
 </header>
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+<main>
+    {% block content %}{% endblock %}
+</main>
+
 </body>
 </html>

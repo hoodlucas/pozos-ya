@@ -31,13 +31,6 @@
         <option value="alta" {% if severidad_actual == "alta" %}selected{% endif %}>Alta</option>
     </select>
 
-    {% if user.is_authenticated %}
-        <label style="margin-left: 10px;">
-            <input type="checkbox" name="mios" value="1" {% if mios_actual %}checked{% endif %}>
-            Solo mis baches
-        </label>
-    {% endif %}
-
     <button type="submit" style="margin-left: 10px;">Filtrar</button>
 
     <!-- Botón para limpiar filtros -->

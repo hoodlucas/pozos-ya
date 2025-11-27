@@ -1,0 +1,235 @@
+:root{
+    --verde-oscuro:#0a6b3c;
+    --verde-claro:#2fa866;
+    --gris-fondo:#f4f6f7;
+    --gris-texto:#2d3436;
+    --borde:#e3e6e8;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--gris-fondo);
+    color: var(--gris-texto);
+}
+
+header{
+    background: #226899;
+    color: white;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+
+.header-wrap{
+    max-width: 1100px;
+    margin: 0 auto;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.brand h1{
+    margin:0;
+    font-size: 30px;
+    letter-spacing:.3px;
+}
+
+.brand small{
+    display:block;
+    font-size:17px;
+    opacity:.9;
+}
+
+nav a{
+    color:white;
+    text-decoration:none;
+    font-weight:600;
+    margin-left:10px;
+    padding:6px 8px;
+    border-radius:6px;
+    transition:.2s;
+}
+nav a:hover{
+    background: rgba(255,255,255,.12);
+}
+
+main{
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 14px;
+}
+
+.card{
+    background:white;
+    border:1px solid var(--borde);
+    border-radius:12px;
+    padding:18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05);
+}
+
+.form-grid{
+    display:grid;
+    gap:12px;
+}
+
+label{
+    font-weight:600;
+    font-size:14px;
+}
+
+input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--borde);
+    border-radius:8px;
+    font-size:15px;
+    outline:none;
+    background:#fff;
+}
+input:focus, select:focus, textarea:focus{
+    border-color: var(--verde-claro);
+    box-shadow: 0 0 0 3px rgba(47,168,102,.15);
+}
+
+.btn{
+    display:inline-block;
+    background: var(--verde-oscuro);
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.2s;
+    text-decoration:none;
+    text-align:center;
+}
+.btn:hover{ background: var(--verde-claro); }
+
+.btn-secondary{
+    background:#fff;
+    color:var(--verde-oscuro);
+    border:1px solid var(--verde-oscuro);
+}
+.btn-secondary:hover{
+    background:#ecf7f0;
+}
+
+.center-wrap{
+    min-height: calc(100vh - 140px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.auth-card{
+    width:100%;
+    max-width: 420px;
+}
+
+.auth-title{
+    margin:0 0 10px 0;
+    font-size:22px;
+    color: var(--verde-oscuro);
+}
+
+.muted{
+    color:#636e72;
+    font-size:14px;
+}
+
+.errors{
+    background:#ffecec;
+    border:1px solid #ffb8b8;
+    color:#8a1f1f;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
+}
+
+
+/* Nuevo CSS para el logo */
+.logo-lomas {
+    height: 45px; /* Altura del logo */
+    width: auto;
+    object-fit: contain;
+}
+
+
+.form-grid {
+    /* Esto hace que las columnas se creen solas si hay espacio, o se apilen si no */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+/* Badge para notificaciones (opcional) */
+.badge {
+    background: #ff4757;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 11px;
+    vertical-align: middle;
+}
+
+/* 2. RESPONSIVE: Reglas para pantallas menores a 768px (Celulares y Tablets chicas) */
+@media (max-width: 768px) {
+    
+    /* El header deja de estar en una línea y pasa a columna */
+    .header-wrap {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch; /* Ocupar todo el ancho */
+    }
+
+    /* Centramos la marca/logo */
+    .brand {
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* El menú de navegación */
+    nav {
+        display: flex;
+        flex-wrap: wrap; /* Permite que los botones bajen si no entran */
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Los botones del menú más grandes para tocar con el dedo */
+    nav a {
+        margin-left: 0;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.1); /* Fondo sutil para que parezcan botones */
+        font-size: 14px;
+        flex-grow: 1; /* Se estiran para llenar huecos */
+        text-align: center;
+    }
+
+    /* Ajustes del contenedor principal */
+    main {
+        margin: 10px auto;
+        padding: 0 10px;
+    }
+
+    .card {
+        padding: 15px; /* Menos relleno en celular para ganar espacio */
+    }
+    
+    /* Ajuste de tablas si tenés alguna */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

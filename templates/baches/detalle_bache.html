@@ -30,5 +30,75 @@
 {% endif %}
 
 <hr>
+
+<p><strong>Estado:</strong> {{ bache.get_estado_display }}</p>
+
+{% if bache.fecha_resolucion %}
+  <p><strong>Resuelto el:</strong> {{ bache.fecha_resolucion|date:"d/m/Y H:i" }}</p>
+{% endif %}
+
+{% if bache.comentario_municipio %}
+  <p><strong>Comentario del municipio:</strong> {{ bache.comentario_municipio }}</p>
+{% endif %}
+
+
+<hr>
+
+<h3>Historial de cambios</h3>
+
+{% if historial %}
+  <ul style="list-style:none; padding:0; margin:0;">
+    {% for h in historial %}
+      <li style="margin-bottom:12px; padding:8px; border:1px solid #444;">
+        <div style="font-size:0.9em; color:#bbb;">
+          {{ h.fecha|date:"d/m/Y H:i" }}
+          {% if h.actor %} | por {{ h.actor.username }} {% endif %}
+        </div>
+
+        {% if h.estado_anterior or h.estado_nuevo %}
+          <div>
+            <strong>Estado</strong>:
+            <span style="color:#ffbaba;">{{ h.estado_anterior }}</span>
+            →
+            <span style="color:#baffba;">{{ h.estado_nuevo }}</span>
+          </div>
+        {% endif %}
+
+        {% if h.comentario_anterior or h.comentario_nuevo %}
+          <div style="margin-top:6px;">
+            <strong>Comentario</strong>:
+            <div style="margin-top:3px;">
+              <span style="color:#ffbaba;">{{ h.comentario_anterior|default:"(vacío)" }}</span>
+              →
+              <span style="color:#baffba;">{{ h.comentario_nuevo|default:"(vacío)" }}</span>
+            </div>
+          </div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay cambios registrados todavía.</p>
+{% endif %}
+
+
+<p>
+  Me afecta: <strong>{{ bache.upvotes.count }}</strong>
+</p>
+
+{% if user.is_authenticated %}
+  <form action="{% url 'toggle_upvote' bache.id %}" method="post">
+    {% csrf_token %}
+    {% if user in bache.upvotes.all %}
+      <button type="submit">Quitar voto</button>
+    {% else %}
+      <button type="submit">Me afecta</button>
+    {% endif %}
+  </form>
+{% else %}
+  <p>Iniciá sesión para votar.</p>
+{% endif %}
+
+
 <a href="{% url 'lista_baches' %}">Volver al listado</a>
 {% endblock %}

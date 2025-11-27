@@ -20,18 +20,26 @@ from baches import views as baches_views
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-
+from baches.views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', baches_views.lista_baches, name='lista_baches'), # Principal
     path('nuevo/', baches_views.crear_bache, name='crear_bache'),
     path('municipio/', baches_views.panel_municipio, name='panel_municipio'),
-    
-    # LOGIN / LOGOUT
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),   
-    path('logout/', baches_views.logout_view, name='logout'),
     path("bache/<int:pk>/", baches_views.detalle_bache, name="detalle_bache"),
+    path("mis-reclamos/", baches_views.mis_baches, name="mis_baches"),
+    path("municipio/export/csv/", baches_views.exportar_baches_csv, name="exportar_baches_csv"),
+    path("bache/<int:pk>/upvote/", baches_views.toggle_upvote, name="toggle_upvote"),
+    
+    # LOGIN / LOGOUT / REGISTRO
+    path("login/", CustomLoginView.as_view(), name="login"),   
+    path('logout/', baches_views.logout_view, name='logout'),
+    path("registro/", baches_views.registro, name="registro"),
+    
+    # NOTIFICACIONES
+    path("notificaciones/", baches_views.mis_notificaciones, name="mis_notificaciones"),
+    path("notificaciones/<int:notif_id>/leida/", baches_views.marcar_notificacion_leida, name="marcar_notificacion_leida"),
     
 ]
 

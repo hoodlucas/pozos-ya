@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis reclamos - Pozos Ya{% endblock %}
+
+{% block content %}
+
+<style>
+    tr.resaltado {
+        background: #fff3b0;
+        transition: background 0.6s;
+    }
+</style>
+
+<h2>Mis reclamos</h2>
+
+<div style="margin-bottom: 12px;">
+    <a href="{% url 'lista_baches' %}">← Volver a todos los baches</a>
+</div>
+
+<div id="map-lista" style="height: 450px; margin-bottom: 20px;"></div>
+
+<!-- JSON para el mapa -->
+{{ baches_data|json_script:"baches-data" }}
+
+<script>
+    // Mapa centrado aprox. en Lomas
+    const map = L.map('map-lista').setView([-34.76, -58.4], 12);
+
+    // Capa base OSM
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // JSON generado en la view
+    const baches = JSON.parse(document.getElementById("baches-data").textContent);
+
+    // Resalta y scrollea a la fila correspondiente
+    function resaltarFila(id) {
+        document.querySelectorAll("tr.resaltado").forEach(tr => tr.classList.remove("resaltado"));
+        const row = document.getElementById(`bache-row-${id}`);
+        if (row) {
+            row.classList.add("resaltado");
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }
+
+    const markers = [];
+    const markersById = {};
+
+    // Marcadores
+    baches.forEach(b => {
+        const marker = L.marker([b.latitud, b.longitud]).addTo(map);
+        markers.push(marker);
+        markersById[b.id] = marker;
+
+        marker.bindPopup(`
+            <strong>${b.titulo}</strong><br>
+            Severidad: ${b.severidad}<br>
+            Estado: ${b.estado}<br>
+            ${b.imagen_url ? `<img src="${b.imagen_url}" style="width:140px; margin-top:6px; border-radius:6px;">` : ""}
+            <br>
+            <a href="/bache/${b.id}/">Ver detalle</a>
+        `);
+
+        marker.on("click", () => resaltarFila(b.id));
+    });
+
+    // Ajustar bounds
+    if (markers.length > 0) {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.2));
+    }
+
+    // Click fila -> centrar marcador
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("tr[id^='bache-row-']").forEach(row => {
+            row.style.cursor = "pointer";
+
+            row.addEventListener("click", () => {
+                const idStr = row.id.replace("bache-row-", "");
+                const id = parseInt(idStr);
+
+                const marker = markersById[id];
+                if (marker) {
+                    map.setView(marker.getLatLng(), 17, { animate: true });
+                    marker.openPopup();
+                    resaltarFila(id);
+                }
+            });
+        });
+    });
+</script>
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Ubicación</th>
+            <th>Barrio</th>
+            <th>Severidad</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Foto</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for b in baches %}
+        <tr id="bache-row-{{ b.id }}">
+            <td>
+                <a href="{% url 'detalle_bache' b.id %}">{{ b.titulo }}</a>
+                (tu reclamo)
+            </td>
+            <td>{{ b.calle }} {{ b.altura }}</td>
+            <td>{{ b.barrio }}</td>
+            <td>{{ b.get_severidad_display }}</td>
+            <td>{{ b.get_estado_display }}</td>
+            <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+            <td>
+                {% if b.imagen %}
+                    <img src="{{ b.imagen.url }}" style="width:80px; height:auto; border-radius:4px;">
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="7">Todavía no reportaste ningún bache.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

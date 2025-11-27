@@ -1,18 +1,52 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Iniciar sesión - Pozos Ya{% endblock %}
 
 {% block content %}
-<h2>Iniciar sesión</h2>
+<div class="center-wrap">
+    
+    <div class="card auth-card">
+        {% if form.errors %}
+            <div class="errors">
+                Tu nombre de usuario y/o contraseña son incorrectos. Por favor, intenta de nuevo.
+            </div>
+            <br>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+            <div class="form-grid">
+                {% for field in form %}
+                    {% if field.label_tag %}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% endif %}
+                    
+                    {{ field }}
 
-    {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-    {% endif %}
+                    {% for error in field.errors %}
+                        <small class="muted" style="color:#d63031;">{{ error }}</small>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            
+            <br>
 
-    <button type="submit">Entrar</button>
-</form>
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" class="btn">Entrar</button>
+            
+            <br>
+            
+            <p class="muted" style="margin-top: 15px;">
+                ¿Aún no tienes cuenta? <a href="{% url 'registro' %}" style="color: var(--verde-oscuro); text-decoration: none; font-weight: 600;">Regístrate aquí</a>.
+            </p>
+
+        </form>
+
+    </div>
+</div>
 {% endblock %}

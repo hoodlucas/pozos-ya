@@ -1,0 +1,31 @@
+html, body {
+    height: 100%;
+}
+
+.auth-wrapper {
+    height: 100vh;
+}
+
+.auth-box {
+    max-width: 420px;
+    width: 100%;
+    background-color: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.10);
+    border: 1px solid #e5e7eb;
+}
+
+/* Opcional: un toque municipal Lomas */
+.auth-title {
+    color: #2f6fa7;
+    font-weight: 700;
+}
+
+.btn-lomas {
+    background: #2f6fa7;
+    border: none;
+}
+.btn-lomas:hover {
+    background: #255a86;
+}

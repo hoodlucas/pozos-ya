@@ -1,22 +1,16 @@
 {% extends 'base.html' %}
-
 {% load static %}
-
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- Turf para validar punto dentro del polígono -->
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 {% block title %}Reportar bache - Pozos Ya{% endblock %}
 
+{% block extra_head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
 {% block content %}
 <h2>Reportar un nuevo bache</h2>
-
-<p>Hacé clic en el mapa para marcar dónde está el bache. Después completá los datos y guardá.</p>
+<p>Hacé clic en el mapa para marcar dónde está el bache. Solo se permiten reportes dentro de la zona roja.</p>
 
 <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
 
@@ -26,79 +20,117 @@
     <button type="submit">Guardar</button>
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
 
 <script>
-    const map = L.map('map').setView([-34.76, -58.4], 13);
+  // 1. Configuración inicial del mapa
+  const map = L.map('map').setView([-34.76, -58.4], 18);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-    let marker = null;
+  // Variable para guardar el polígono
+  let poligonoMunicipio = null;
 
-    async function reverseGeocode(lat, lng) {
-        // Endpoint público de Nominatim (OSM)
-        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`;
+  // 2. Cargar GeoJSON de Lomas
+  const geoUrl = "{% static 'geo/lomas_de_zamora.geojson' %}";
 
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    // Desde frontend no podés garantizar el User-Agent real,
-                    // pero esto ayuda a no ir "anónimo"
-                    'Accept': 'application/json'
-                }
-            });
+  fetch(geoUrl)
+    .then(r => r.json())
+    .then(data => {
+      // Dibujamos la línea roja
+      const limiteLayer = L.geoJSON(data, {
+        style: { color: "#d00", weight: 2, fillOpacity: 0.1 }
+      }).addTo(map);
+      
+      map.fitBounds(limiteLayer.getBounds());
 
-            if (!response.ok) return null;
+      // Guardamos la geometría para Turf
+      // Turf necesita el "Feature" individual, no toda la colección
+      if (data.type === "FeatureCollection" && data.features.length > 0) {
+          poligonoMunicipio = data.features[0]; 
+      } else {
+          poligonoMunicipio = data;
+      }
+      console.log("Límite cargado correctamente.");
+    })
+    .catch(err => console.error("Error cargando el mapa:", err));
+
+  let marker = null;
+
+  // 3. Función Click (LA PARTE IMPORTANTE)
+  async function onMapClick(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+
+    // --- VALIDACIÓN CON TURF ---
+    // Primero verificamos si Turf cargó
+    if (typeof turf === 'undefined') {
+        console.error("La librería Turf no cargó.");
+        alert("Error interno: No se pudo validar la ubicación. Recargá la página.");
+        return;
+    }
+
+    // Si ya tenemos el polígono, validamos
+    if (poligonoMunicipio) {
+        // Turf usa [longitud, latitud]
+        const punto = turf.point([lng, lat]);
+        const estaDentro = turf.booleanPointInPolygon(punto, poligonoMunicipio);
+
+        if (!estaDentro) {
+            alert("🚫 Zona incorrecta: El bache debe estar dentro de Lomas de Zamora.");
+            return; // ALTO: Si entra acá, la función muere y no pone el marcador.
+        }
+    } else {
+        console.warn("El mapa de Lomas no terminó de cargar, validación omitida temporalmente.");
+    }
+    // ---------------------------
+
+    // Si llegamos acá, es válido: Ponemos el marcador
+    if (marker) {
+      marker.setLatLng(e.latlng);
+    } else {
+      marker = L.marker(e.latlng).addTo(map);
+    }
+
+    // Llenamos los inputs ocultos
+    const latInput = document.getElementById('id_latitud');
+    const lngInput = document.getElementById('id_longitud');
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lngInput) lngInput.value = lng.toFixed(6);
+
+    // Intentamos buscar la calle (Nominatim)
+    // Lo ponemos en try/catch para que si falla, NO rompa el programa
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`;
+        
+        // Agregamos headers para intentar evitar el error 403
+        const response = await fetch(url, {
+            headers: { 'Accept-Language': 'es' } 
+        });
+        
+        if (response.ok) {
             const data = await response.json();
-            return data.address || null;
-        } catch (err) {
-            console.log("Reverse geocoding error:", err);
-            return null;
-        }
-    }
+            const calleInput = document.getElementById('id_calle');
+            const alturaInput = document.getElementById('id_altura');
 
-    async function onMapClick(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-
-        if (marker) {
-            marker.setLatLng(e.latlng);
+            if (data.address) {
+                const calle = data.address.road || data.address.pedestrian || '';
+                const altura = data.address.house_number || '';
+                if (calleInput) calleInput.value = calle;
+                if (alturaInput) alturaInput.value = altura;
+            }
         } else {
-            marker = L.marker(e.latlng).addTo(map);
+            console.warn("Nominatim bloqueó la petición (esto es normal en localhost).");
         }
-
-        // Guardar coords en hidden inputs
-        const latInput = document.getElementById('id_latitud');
-        const lngInput = document.getElementById('id_longitud');
-        if (latInput && lngInput) {
-            latInput.value = lat.toFixed(6);
-            lngInput.value = lng.toFixed(6);
-        }
-
-        // Buscar dirección y autocompletar
-        const address = await reverseGeocode(lat, lng);
-        if (!address) return;
-
-        // Inputs del formulario
-        const calleInput = document.getElementById('id_calle');
-        const alturaInput = document.getElementById('id_altura');
-        const barrioSelect = document.getElementById('id_barrio');
-
-        // Nominatim no siempre trae todo, por eso usamos "fallbacks"
-        const calle = address.road || address.pedestrian || address.path || '';
-        const altura = address.house_number || '';
-        const barrio = address.suburb || address.neighbourhood || address.city_district || '';
-
-        if (calleInput && calle) calleInput.value = calle;
-        if (alturaInput && altura) alturaInput.value = altura;
-        if (barrioInput && barrio) barrioInput.value = barrio;
+    } catch (err) {
+        console.log("No se pudo autocompletar la dirección:", err);
+        // No hacemos nada, el usuario puede escribir la dirección a mano
     }
+  }
 
-    map.on('click', onMapClick);
+  map.on('click', onMapClick);
 </script>
-
-
 {% endblock %}
