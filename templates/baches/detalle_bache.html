@@ -49,8 +49,8 @@
 {% if historial %}
   <ul style="list-style:none; padding:0; margin:0;">
     {% for h in historial %}
-      <li style="margin-bottom:12px; padding:8px; border:1px solid #444;">
-        <div style="font-size:0.9em; color:#bbb;">
+      <li style="margin-bottom:12px; padding:8px; border:1px solid #2e2e2e;">
+        <div style="font-size:0.9em; color:#424242;">
           {{ h.fecha|date:"d/m/Y H:i" }}
           {% if h.actor %} | por {{ h.actor.username }} {% endif %}
         </div>
@@ -58,9 +58,9 @@
         {% if h.estado_anterior or h.estado_nuevo %}
           <div>
             <strong>Estado</strong>:
-            <span style="color:#ffbaba;">{{ h.estado_anterior }}</span>
+            <span style="color:#000000;">{{ h.estado_anterior }}</span>
             →
-            <span style="color:#baffba;">{{ h.estado_nuevo }}</span>
+            <span style="color:#000000;">{{ h.estado_nuevo }}</span>
           </div>
         {% endif %}
 
@@ -68,9 +68,9 @@
           <div style="margin-top:6px;">
             <strong>Comentario</strong>:
             <div style="margin-top:3px;">
-              <span style="color:#ffbaba;">{{ h.comentario_anterior|default:"(vacío)" }}</span>
+              <span style="color:#000000;">{{ h.comentario_anterior|default:"(vacío)" }}</span>
               →
-              <span style="color:#baffba;">{{ h.comentario_nuevo|default:"(vacío)" }}</span>
+              <span style="color:#000000;">{{ h.comentario_nuevo|default:"(vacío)" }}</span>
             </div>
           </div>
         {% endif %}
@@ -99,6 +99,7 @@
   <p>Iniciá sesión para votar.</p>
 {% endif %}
 
+<BR>
 
 <a href="{% url 'lista_baches' %}">Volver al listado</a>
 {% endblock %}

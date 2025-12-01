@@ -45,6 +45,11 @@
                 ¿Aún no tienes cuenta? <a href="{% url 'registro' %}" style="color: var(--verde-oscuro); text-decoration: none; font-weight: 600;">Regístrate aquí</a>.
             </p>
 
+            <p class="muted" style="margin-top:12px;">
+                ¿Olvidaste tu contraseña?
+                <a href="{% url 'password_reset_request' %}">Recuperala</a>
+            </p>
+
         </form>
 
     </div>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verificar email - PozosYa{% endblock %}
+
+{% block content %}
+<div class="center-wrap">
+    <div class="card auth-card">
+        <h2 style="margin-bottom: 20px; text-align: center;">Verificar Email</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                <label for="id_codigo">Código (6 dígitos)</label>
+                <input id="id_codigo" name="codigo" maxlength="6" required 
+                    style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%;">
+            </div>
+
+            <br>
+            
+            <button type="submit" class="btn">Verificar</button>
+            
+            <br>
+            
+            </form>
+        
+    </div>
+</div>
+{% endblock %}

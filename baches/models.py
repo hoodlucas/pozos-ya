@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.utils import timezone
+from datetime import timedelta
+import random
 
 # Create your models here.
 
@@ -81,6 +84,7 @@ class Notificacion(models.Model):
 
 
 
+# PERFIL
 class Perfil(models.Model):
     ROLES = [
         ('vecino', 'Vecino'),
@@ -98,3 +102,54 @@ class Perfil(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.get_rol_display()}"
 
+
+
+# CÓDIGO DE MAIL
+class CodigoEmail(models.Model):
+    TIPO_CHOICES = [
+        ("verify", "Verificación"),
+        ("reset", "Recuperación"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="codigos_email")
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    codigo = models.CharField(max_length=6)
+    expira_en = models.DateTimeField()
+    usado = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    def esta_vigente(self):
+        return (not self.usado) and timezone.now() < self.expira_en
+
+
+
+class CodigoVerificacionEmail(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="codigos_verificacion")
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def is_used(self):
+        return self.used_at is not None
+
+    def __str__(self):
+        return f"Verificación {self.user.username} - expira {self.expires_at:%d/%m/%Y %H:%M}"
+
+
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reset_codes")
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def is_used(self):
+        return self.used_at is not None

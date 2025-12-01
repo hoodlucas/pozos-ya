@@ -1,21 +1,36 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
-from .models import Bache, HistorialBache, Notificacion, Perfil
-from .forms import BacheForm, RegistroForm
-from django.http import HttpResponse
-from django.contrib.auth import logout
-import json
+from django.http import HttpResponseForbidden, HttpResponse
+from django.contrib.auth import logout, login
 from django.core.serializers.json import DjangoJSONEncoder
-from .decorators import solo_municipio
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.urls import reverse
-from django.contrib.auth import login
-import csv
-from django.db.models import Count
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.auth.hashers import make_password, check_password
+
+import json
+import csv
+import random
+import secrets
+from datetime import timedelta
+
+# Importaciones Locales de la Aplicación
+from .models import (
+    Bache,
+    HistorialBache,
+    Notificacion,
+    Perfil,
+    CodigoEmail,
+    CodigoVerificacionEmail,
+    PasswordResetCode
+)
+from .forms import BacheForm, RegistroForm, PasswordResetRequestForm, PasswordResetConfirmForm
+from .decorators import solo_municipio
 
 #CARGAR DATOS EN PRINCIPAL
 def lista_baches(request):
@@ -91,65 +106,55 @@ def crear_bache(request):
 # MUNICIPIO
 @login_required
 def panel_municipio(request):
-    # 0) Seguridad por rol
     if not hasattr(request.user, "perfil") or request.user.perfil.rol != "municipio":
         return HttpResponseForbidden("No tenés permisos para ver esta página.")
 
+    # =========================
+    # POST: actualizar en masa
+    # =========================
     if request.method == "POST":
-
-        # 1) Recorremos todos los inputs del POST buscando estado_{id}
         for key, value in request.POST.items():
             if not key.startswith("estado_"):
                 continue
 
-            partes = key.split("_", 1)
-            if len(partes) != 2 or not partes[1].isdigit():
-                continue  # clave malformada
-
-            bache_id = int(partes[1])
+            bache_id = key.split("_")[1]
             nuevo_estado = (value or "").strip()
 
-            # comentario_{id} correspondiente
             comentario_key = f"comentario_{bache_id}"
-            nuevo_comentario = (request.POST.get(comentario_key) or "").strip()
+            nuevo_comentario = (request.POST.get(comentario_key, "") or "").strip()
 
             try:
                 bache = Bache.objects.get(id=bache_id)
             except Bache.DoesNotExist:
                 continue
 
-            # 2) Guardamos valores anteriores
             estado_anterior = bache.estado
             comentario_anterior = getattr(bache, "comentario_municipio", "") or ""
 
             hubo_cambio = False
 
-            # 3) Estado nuevo
+            # cambio de estado
             if nuevo_estado and nuevo_estado != estado_anterior:
                 bache.estado = nuevo_estado
                 hubo_cambio = True
 
-                # fecha_resolucion opcional
                 if hasattr(bache, "fecha_resolucion"):
                     if nuevo_estado == "resuelto":
                         bache.fecha_resolucion = timezone.now()
                     else:
                         bache.fecha_resolucion = None
 
-            # 4) Comentario nuevo (si existe el campo)
-            if hasattr(bache, "comentario_municipio"):
-                if nuevo_comentario != comentario_anterior:
-                    bache.comentario_municipio = nuevo_comentario
-                    hubo_cambio = True
+            # cambio de comentario
+            if hasattr(bache, "comentario_municipio") and nuevo_comentario != comentario_anterior:
+                bache.comentario_municipio = nuevo_comentario
+                hubo_cambio = True
 
-            # 5) Si no hubo cambios reales, pasamos al siguiente
             if not hubo_cambio:
                 continue
 
-            # 6) Guardamos el bache
             bache.save()
 
-            # 7) Historial
+            # Historial
             HistorialBache.objects.create(
                 bache=bache,
                 actor=request.user,
@@ -159,9 +164,8 @@ def panel_municipio(request):
                 comentario_nuevo=getattr(bache, "comentario_municipio", "") or "",
             )
 
-            # 8) Notificación al vecino (si existe)
+            # Notificación al vecino (sistema + mail si ya lo tenés implementado)
             if bache.vecino:
-                # definimos tipo/mensaje según qué cambió
                 cambio_estado = (bache.estado != estado_anterior)
                 cambio_coment = (
                     hasattr(bache, "comentario_municipio")
@@ -172,18 +176,23 @@ def panel_municipio(request):
                 if cambio_estado and cambio_coment:
                     tipo = "mixto"
                     mensaje = (
-                        f"Tu reclamo '{bache.titulo}' cambió a {bache.get_estado_display()} "
-                        f"y el municipio dejó un comentario."
+                        f"Tu reclamo '{bache.titulo}' cambió a {bache.get_estado_display()}.\n"
+                        f"Comentario del municipio: {nuevo_comentario}"
                     )
                 elif cambio_estado:
                     tipo = "estado"
-                    mensaje = f"Tu reclamo '{bache.titulo}' cambió a {bache.get_estado_display()}."
+                    mensaje = (
+                        f"Tu reclamo '{bache.titulo}' cambió a {bache.get_estado_display()}.\n"
+                        f"Comentario: {nuevo_comentario}" if nuevo_comentario else
+                        f"Tu reclamo '{bache.titulo}' cambió a {bache.get_estado_display()}."
+                    )
                 elif cambio_coment:
                     tipo = "comentario"
-                    mensaje = f"El municipio dejó un comentario en tu reclamo '{bache.titulo}'."
+                    mensaje = (
+                        f"El municipio dejó un comentario en tu reclamo '{bache.titulo}':\n"
+                        f"{nuevo_comentario}"
+                    )
                 else:
-                    # teóricamente no entra acá porque hubo_cambio=True,
-                    # pero lo dejamos por seguridad
                     tipo = "info"
                     mensaje = f"Hubo una actualización en tu reclamo '{bache.titulo}'."
 
@@ -194,15 +203,63 @@ def panel_municipio(request):
                     mensaje=mensaje
                 )
 
-        return redirect("panel_municipio")
+                # Si ya tenés función para mandar mail, llamala acá.
+                # ej: enviar_notificacion_email(bache.vecino.email, "Actualización de reclamo", mensaje)
 
-    # GET (tus filtros los podés volver a enchufar acá como ya los tenías)
-    baches = (
-    Bache.objects
-    .annotate(votos_count=Count("upvotes"))
-    .order_by("-votos_count", "-fecha_creacion")
+        # IMPORTANTE: volver al panel conservando filtros GET
+        qs = request.META.get("QUERY_STRING", "")
+        url = reverse("panel_municipio")
+        if qs:
+            url = f"{url}?{qs}"
+        return redirect(url)
+
+    # =========================
+    # GET: filtros + orden
+    # =========================
+    estado = request.GET.get("estado", "").strip()
+    severidad = request.GET.get("severidad", "").strip()
+    barrio = request.GET.get("barrio", "").strip()
+    q = request.GET.get("q", "").strip()
+    orden = request.GET.get("orden", "").strip()  # nuevo: orden por votos / fecha
+
+    qs = Bache.objects.all()
+
+    # annotate votos (si tu upvotes es ManyToMany/related_name="upvotes")
+    qs = qs.annotate(votos_count=Count("upvotes", distinct=True))
+
+    if estado:
+        qs = qs.filter(estado=estado)
+    if severidad:
+        qs = qs.filter(severidad=severidad)
+    if barrio:
+        qs = qs.filter(barrio=barrio)
+    if q:
+        qs = qs.filter(
+            Q(titulo__icontains=q) |
+            Q(calle__icontains=q) |
+            Q(altura__icontains=q)
+        )
+
+    # Orden
+    if orden == "mas_votados":
+        qs = qs.order_by("-votos_count", "-fecha_creacion")
+    elif orden == "menos_votados":
+        qs = qs.order_by("votos_count", "-fecha_creacion")
+    else:
+        # default: más nuevos
+        qs = qs.order_by("-fecha_creacion")
+
+    baches = qs
+
+    # Barrios para el select (solo los existentes)
+    barrios = (
+        Bache.objects.exclude(barrio="")
+        .values_list("barrio", flat=True)
+        .distinct()
+        .order_by("barrio")
     )
 
+    # Dashboard (contadores del total sin filtros o con filtros? acá con filtros)
     total = baches.count()
     nuevos = baches.filter(estado="nuevo").count()
     en_gestion = baches.filter(estado="en_gestion").count()
@@ -211,11 +268,19 @@ def panel_municipio(request):
     return render(request, "baches/panel_municipio.html", {
         "baches": baches,
         "ESTADO_CHOICES": Bache.ESTADO_CHOICES,
+        "SEVERIDAD_CHOICES": Bache.SEVERIDAD_CHOICES,
+        "barrios": barrios,
+        "estado_actual": estado,
+        "severidad_actual": severidad,
+        "barrio_actual": barrio,
+        "q_actual": q,
+        "orden_actual": orden,
         "total": total,
         "nuevos": nuevos,
         "en_gestion": en_gestion,
         "resueltos": resueltos,
     })
+
 
 
 
@@ -231,13 +296,15 @@ def registro(request):
     if request.method == "POST":
         form = RegistroForm(request.POST)
         if form.is_valid():
+            # 1) Crear usuario pero INACTIVO
             user = form.save(commit=False)
             user.email = form.cleaned_data.get("email", "")
             user.first_name = form.cleaned_data.get("first_name", "")
             user.last_name = form.cleaned_data.get("last_name", "")
+            user.is_active = False
             user.save()
 
-            # Creamos perfil vecino
+            # 2) Crear perfil vecino
             Perfil.objects.create(
                 user=user,
                 rol="vecino",
@@ -247,9 +314,34 @@ def registro(request):
                 domicilio=form.cleaned_data.get("domicilio", ""),
             )
 
-            # Logueo automático y a la home
-            login(request, user)
-            return redirect("lista_baches")
+            # 3) Generar código y guardarlo
+            codigo = f"{random.randint(0, 999999):06d}"
+            expira = timezone.now() + timedelta(minutes=15)
+
+            CodigoEmail.objects.create(
+                user=user,
+                tipo="verify",
+                codigo=codigo,
+                expira_en=expira,
+                usado=False,
+            )
+
+            # 4) Enviar mail real
+            send_mail(
+                subject="Código de verificación - PozosYa",
+                message=f"Tu código es: {codigo}\nVence en 15 minutos.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+            # 5) Guardar en sesión para simplificar el flujo
+            request.session["verify_user_id"] = user.id
+
+            messages.success(request, "Te enviamos un código al email. Ingresalo para activar tu cuenta.")
+            return redirect("verificar_email")
+        else:
+            messages.error(request, "Revisá los datos: hay errores en el formulario.")
     else:
         form = RegistroForm()
 
@@ -386,3 +478,182 @@ class CustomLoginView(LoginView):
     def form_invalid(self, form):
         messages.error(self.request, "Usuario o contraseña incorrectos.")
         return super().form_invalid(form)
+
+
+
+# VERIFICAR EMAIL
+def verificar_email(request):
+    user_id = request.session.get("verify_user_id")
+    if not user_id:
+        messages.error(request, "No hay verificación pendiente.")
+        return redirect("login")
+
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        codigo_ingresado = request.POST.get("codigo", "").strip()
+        cod = (CodigoEmail.objects
+            .filter(user=user, tipo="verify", usado=False)
+            .order_by("-creado_en")
+            .first())
+
+        if not cod or not cod.esta_vigente() or cod.codigo != codigo_ingresado:
+            messages.error(request, "Código inválido o vencido.")
+            return render(request, "registration/verificar.html")
+
+        cod.usado = True
+        cod.save()
+        user.is_active = True
+        user.save()
+
+        # ahora sí: login
+        login(request, user)
+        del request.session["verify_user_id"]
+        messages.success(request, "Cuenta verificada. Ya podés usar PozosYa.")
+        return redirect("lista_baches")
+
+    return render(request, "registration/verificar.html")
+
+
+
+# RECUPERAR CONTRASEÑA
+def _generar_codigo_6():
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+def _enviar_codigo_verificacion(user, code):
+    if not user.email:
+        return False
+
+    subject = "Verificá tu cuenta - PozosYa"
+    message = (
+        f"Hola {user.first_name or user.username},\n\n"
+        f"Tu código de verificación es: {code}\n\n"
+        f"Este código vence en 15 minutos.\n\n"
+        f"Si no creaste esta cuenta, ignorá este correo."
+    )
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+    return True
+
+
+
+def _gen_code_6():
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+def _send_reset_code_email(user, code):
+    subject = "Recuperación de contraseña - PozosYa"
+    message = (
+        f"Hola {user.first_name or user.username},\n\n"
+        f"Tu código para recuperar la contraseña es: {code}\n\n"
+        f"Vence en 15 minutos.\n"
+        f"Si no pediste este código, ignorá este correo."
+    )
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+
+
+
+def password_reset_request(request):
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"].strip().lower()
+
+            user = User.objects.filter(email__iexact=email).first()
+
+            # Por seguridad: siempre mostramos el mismo mensaje, exista o no.
+            if user:
+                code = _gen_code_6()
+                PasswordResetCode.objects.create(
+                    user=user,
+                    code_hash=make_password(code),
+                    expires_at=timezone.now() + timedelta(minutes=15),
+                )
+                _send_reset_code_email(user, code)
+
+                request.session["pending_reset_user_id"] = user.id
+
+            messages.success(request, "Si el email existe, te enviamos un código para recuperar la contraseña.")
+            return redirect("password_reset_confirm")
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, "registration/password_reset_request.html", {"form": form})
+
+
+
+def password_reset_confirm(request):
+    user_id = request.session.get("pending_reset_user_id")
+    if not user_id:
+        messages.error(request, "No hay una recuperación pendiente. Pedí un código nuevamente.")
+        return redirect("password_reset_request")
+
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        messages.error(request, "No encontramos el usuario a recuperar.")
+        return redirect("password_reset_request")
+
+    if request.method == "POST":
+        form = PasswordResetConfirmForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data["code"].strip()
+            new_password = form.cleaned_data["password1"]
+
+            token = (
+                PasswordResetCode.objects
+                .filter(user=user, used_at__isnull=True)
+                .order_by("-created_at")
+                .first()
+            )
+
+            if not token:
+                messages.error(request, "No hay un código vigente. Pedí uno nuevo.")
+                return redirect("password_reset_request")
+
+            if token.is_expired():
+                messages.error(request, "El código venció. Pedí uno nuevo.")
+                return redirect("password_reset_request")
+
+            if not check_password(code, token.code_hash):
+                messages.error(request, "Código incorrecto.")
+                return redirect("password_reset_confirm")
+
+            user.set_password(new_password)
+            user.save()
+
+            token.used_at = timezone.now()
+            token.save(update_fields=["used_at"])
+
+            request.session.pop("pending_reset_user_id", None)
+
+            messages.success(request, "Contraseña actualizada. Ahora podés iniciar sesión.")
+            return redirect("login")
+    else:
+        form = PasswordResetConfirmForm()
+
+    return render(request, "registration/password_reset_confirm.html", {"form": form, "email": user.email})
+
+
+
+def enviar_mail_cambio_bache(destinatario, asunto, cuerpo):
+    email = (getattr(destinatario, "email", "") or "").strip()
+    if not email:
+        return  # no hay email
+
+    # Si tenés verificación en Perfil y querés exigirla:
+    # (cambiá "email_verificado" por el nombre real de tu campo si difiere)
+    if hasattr(destinatario, "perfil") and hasattr(destinatario.perfil, "email_verificado"):
+        if not destinatario.perfil.email_verificado:
+            return
+
+    send_mail(
+        subject=asunto,
+        message=cuerpo,
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+        recipient_list=[email],
+        fail_silently=True,  # si querés ver errores, ponelo en False mientras probás
+    )

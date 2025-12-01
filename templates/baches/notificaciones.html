@@ -1,43 +1,68 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Notificaciones - Pozos Ya{% endblock %}
 
+{% block extra_head %}
+    {# si ya lo cargás global en base, esto no hace falta #}
+    <link rel="stylesheet" href="{% static 'baches/css/municipio.css' %}">
+{% endblock %}
+
 {% block content %}
-<h2>Mis notificaciones</h2>
+    <div class="pm-wrapper">
+    <h2 class="pm-title">Mis notificaciones</h2>
 
-{% if no_leidas > 0 %}
-    <p>Tenés {{ no_leidas }} notificación/es sin leer.</p>
-{% endif %}
+    {% if no_leidas > 0 %}
+        <div class="pm-table-card" style="margin-bottom: 14px; padding: 14px;">
+        <strong>Tenés {{ no_leidas }} notificación/es sin leer.</strong>
+        </div>
+    {% endif %}
 
-{% if notificaciones %}
-    <table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-        <tr>
-        <th>Fecha</th>
-        <th>Mensaje</th>
-        <th>Estado</th>
-        <th>Acción</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for n in notificaciones %}
-        <tr {% if not n.leida %}style="font-weight:bold;"{% endif %}>
-        <td>{{ n.fecha|date:"d/m/Y H:i" }}</td>
-        <td>{{ n.mensaje }}</td>
-        <td>
-            {% if n.leida %}Leída{% else %}No leída{% endif %}
-        </td>
-        <td>
-            <a href="{% url 'marcar_notificacion_leida' n.id %}">
-            Ver reclamo
-            </a>
-        </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    </table>
-{% else %}
-    <p>No tenés notificaciones todavía.</p>
-{% endif %}
+    {% if notificaciones %}
+        <div class="pm-table-card">
+        <div class="pm-table-scroll">
+            <table class="pm-table">
+            <thead>
+                <tr>
+                <th>Fecha</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th>Acción</th>
+                </tr>
+            </thead>
 
+            <tbody>
+                {% for n in notificaciones %}
+                <tr class="{% if not n.leida %}nt-unread{% endif %}">
+                    <td class="pm-nowrap">{{ n.fecha|date:"d/m/Y H:i" }}</td>
+
+                    <td>
+                    <div class="pm-ubi-cell">{{ n.mensaje }}</div>
+                    </td>
+
+                    <td>
+                    {% if n.leida %}
+                        <span class="pm-pill">Leída</span>
+                    {% else %}
+                        <span class="pm-pill nt-pill-unread">No leída</span>
+                    {% endif %}
+                    </td>
+
+                    <td class="pm-nowrap">
+                    <a class="nt-link" href="{% url 'marcar_notificacion_leida' n.id %}">
+                        Ver reclamo
+                    </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    {% else %}
+        <div class="pm-table-card" style="padding: 18px;">
+        <span class="pm-muted">No tenés notificaciones todavía.</span>
+        </div>
+    {% endif %}
+    </div>
 {% endblock %}

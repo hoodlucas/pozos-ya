@@ -1,12 +1,25 @@
-{# panel_municipio.html #}
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Panel Municipio{% endblock %}
 
-{% block content %}
-<h2>Panel Municipio</h2>
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'baches/css/municipio.css' %}">
+{% endblock %}
 
-<!-- FORM DE FILTROS (GET) -->
+{% block content %}
+<!-- FORM ÚNICO PARA ACTUALIZAR EN MASA (POST) -->
+<div class="pm-wrapper">
+  <h2 class="pm-title">Panel Municipio</h2>
+
+  <!-- tus filtros / dashboard acá (si querés después lo estilizamos igual) -->
+  <!-- FORM DE FILTROS (GET) -->
 <form method="get" style="margin-bottom: 15px;">
+    <label>Orden:</label>
+    <select name="orden">
+      <option value="" {% if not orden_actual %}selected{% endif %}>Más nuevos</option>
+      <option value="mas_votados" {% if orden_actual == "mas_votados" %}selected{% endif %}>Más votados</option>
+      <option value="menos_votados" {% if orden_actual == "menos_votados" %}selected{% endif %}>Menos votados</option>
+    </select>
     <label>Estado:</label>
     <select name="estado">
         <option value="">Todos</option>
@@ -37,8 +50,10 @@
         {% endfor %}
     </select>
 
+    <label>Dirección:</label>
     <input type="text" name="q" placeholder="Buscar título/calle" value="{{ q_actual }}">
 
+    <br> <br>
     <button type="submit">Filtrar</button>
     <a href="{% url 'panel_municipio' %}">Limpiar</a>
 </form>
@@ -59,63 +74,91 @@
   </div>
 </div>
 
-<!-- FORM ÚNICO PARA ACTUALIZAR EN MASA (POST) -->
-<form method="post">
-  {% csrf_token %}
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Título</th>
-        <th>Ubicación</th>
-        <th>Severidad</th>
-        <th>Estado</th>
-        <th>Fecha creación</th>
-        <th>Fecha resolución</th>
-        <th>Comentario municipio</th>
-        <th>Votos</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for b in baches %}
-      <tr>
-        <td>{{ b.id }}</td>
-        <td>{{ b.titulo }}</td>
-        <td>{{ b.calle }} {{ b.altura }} ({{ b.barrio }})</td>
-        <td>{{ b.get_severidad_display }}</td>
 
-        <td>
-          <select name="estado_{{ b.id }}">
-            {% for val, label in ESTADO_CHOICES %}
-              <option value="{{ val }}" {% if b.estado == val %}selected{% endif %}>
-                {{ label }}
-              </option>
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="pm-table-card">
+      <div class="pm-table-scroll">
+        <table class="pm-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>Ubicación</th>
+              <th>Severidad</th>
+              <th>Estado</th>
+              <th>Fecha creación</th>
+              <th>Fecha resolución</th>
+              <th>Comentario municipio</th>
+              <th>Votos</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for b in baches %}
+            <tr>
+              <td class="pm-col-id">{{ b.id }}</td>
+
+              <td class="pm-col-title">
+                <div class="pm-title-cell">{{ b.titulo }}</div>
+              </td>
+
+              <td class="pm-col-ubi">
+                <div class="pm-ubi-cell">
+                  {{ b.calle }} {{ b.altura }}
+                  <span class="pm-muted">({{ b.barrio }})</span>
+                </div>
+              </td>
+
+              <td>{{ b.get_severidad_display }}</td>
+
+              <td>
+                <select class="pm-control pm-select" name="estado_{{ b.id }}">
+                  {% for val, label in ESTADO_CHOICES %}
+                    <option value="{{ val }}" {% if b.estado == val %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+
+              <td class="pm-nowrap">{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+
+              <td class="pm-nowrap">
+                {% if b.fecha_resolucion %}
+                  {{ b.fecha_resolucion|date:"d/m/Y H:i" }}
+                {% else %}
+                  <span class="pm-muted">-</span>
+                {% endif %}
+              </td>
+
+              <td class="pm-col-comment">
+                <textarea class="pm-control pm-textarea" name="comentario_{{ b.id }}" rows="2"
+                  placeholder="Comentario del municipio...">{{ b.comentario_municipio }}</textarea>
+              </td>
+
+              <td class="pm-col-votes">
+                <span class="pm-pill">{{ b.votos_count }}</span>
+              </td>
+            </tr>
             {% endfor %}
-          </select>
-        </td>
+          </tbody>
 
-        <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
-        <td>
-          {% if b.fecha_resolucion %}
-            {{ b.fecha_resolucion|date:"d/m/Y H:i" }}
-          {% else %}-{% endif %}
-        </td>
+        </table>
+      </div>
 
-        <td>
-          <textarea name="comentario_{{ b.id }}" rows="2" cols="25">{{ b.comentario_municipio }}</textarea>
-        </td>
-        <td>{{ b.votos_count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <button type="submit">Actualizar todos</button>
-</form>
+      <div class="pm-actions">
+        <button type="submit" class="pm-btn pm-btn-primary">Actualizar todos</button>
+      </div>
+    </div>
+  </form>
+</div>
 
 
-<a href="{% url 'exportar_baches_csv' %}">
+
+<a href="{% url 'exportar_baches_csv' %}?{{ request.GET.urlencode }}">
   Descargar CSV
 </a>
 

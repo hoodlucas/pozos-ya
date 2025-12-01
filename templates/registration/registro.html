@@ -1,17 +1,67 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Registrarse - Pozos Ya{% endblock %}
 
+
 {% block content %}
-<h2>Crear cuenta de vecino</h2>
+<div class="center-wrap">
+    
+    <div class="card auth-card">
+        
+        <h2 class="auth-title">Crear cuenta de vecino</h2>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Registrarme</button>
-</form>
+        <form method="post">
+            {% csrf_token %}
 
-<p style="margin-top:10px;">
-    ¿Ya tenés cuenta? <a href="{% url 'login' %}">Iniciá sesión</a>
-</p>
+            <div class="form-grid">
+                
+                {% for field in form %}
+                    
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    
+                    {{ field }}
+
+                    {% if field.errors %}
+                    <div class="field-error" style="grid-column: 1 / -1;">
+                        {% for error in field.errors %}
+                        <div class="alert alert-danger" role="alert" style="margin: 6px 0;">
+                            <strong>{{ field.label }}:</strong> {{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+
+                    {% if field.name == 'password1' %}
+                        <ul class="muted small-list" style="margin-top: 5px;">
+                            <li>La contraseña no puede ser muy similar a otra información personal.</li>
+                            <li>Debe contener al menos 8 caracteres.</li>
+                            <li>No puede ser una contraseña de uso común.</li>
+                            <li>No puede ser totalmente numérica.</li>
+                        </ul>
+                    {% endif %}
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert" style="grid-column: 1 / -1; margin-top: 15px;">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+            </div>
+            
+            <br>
+
+            <button type="submit" class="btn btn-primary">Registrarme</button>
+            
+            <p class="muted" style="margin-top:15px;">
+                ¿Ya tenés cuenta? <a href="{% url 'login' %}" style="color: var(--verde-oscuro); text-decoration: none; font-weight: 600;">Iniciá sesión</a>
+            </p>
+        </form>
+
+    </div>
+</div>
 {% endblock %}

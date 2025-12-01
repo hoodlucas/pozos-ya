@@ -1,0 +1,141 @@
+/* ============ Layout general ============ */
+.pm-wrapper{
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+.pm-title{
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 14px 0;
+}
+
+/* ============ Card + tabla ============ */
+.pm-table-card{
+    background: #fff;
+    border: 1px solid #e6e9ef;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(16, 24, 40, 0.08);
+}
+
+.pm-table-scroll{
+    overflow-x: auto;
+}
+
+.pm-table{
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px; /* fuerza scroll horizontal si la pantalla es chica */
+}
+
+.pm-table thead{
+    background: #1f6fa3; /* azul municipal */
+    color: #fff;
+}
+
+.pm-table th,
+.pm-table td{
+    padding: 12px 14px;
+    border-bottom: 1px solid #edf0f5;
+    vertical-align: middle;
+    text-align: left;
+    font-size: 14px;
+}
+
+.pm-table tbody tr:hover{
+    background: #f6f9fc;
+}
+
+/* ============ Columnitas útiles ============ */
+.pm-nowrap{ white-space: nowrap; }
+.pm-muted{ color: #6b7280; }
+
+.pm-col-id{ width: 60px; }
+.pm-col-votes{ width: 80px; text-align: center; }
+.pm-col-comment{ width: 260px; }
+
+.pm-title-cell{
+    font-weight: 700;
+    line-height: 1.1;
+    }
+
+.pm-ubi-cell{
+    line-height: 1.2;
+}
+
+/* ============ Controles dentro de la tabla ============ */
+.pm-control{
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d7dde7;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+}
+
+.pm-control:focus{
+    border-color: #1f6fa3;
+    box-shadow: 0 0 0 3px rgba(31, 111, 163, 0.18);
+}
+
+.pm-select{
+    cursor: pointer;
+}
+
+.pm-textarea{
+    resize: vertical;
+    min-height: 42px;
+}
+
+/* ============ “Pill” de votos ============ */
+.pm-pill{
+    display: inline-block;
+    min-width: 34px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #1f6fa3;
+    font-weight: 800;
+    border: 1px solid #d8ecff;
+}
+
+/* ============ Acciones ============ */
+.pm-actions{
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 14px;
+    background: #fbfcfe;
+    border-top: 1px solid #edf0f5;
+}
+
+.pm-btn{
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pm-btn-primary{
+    background: #1f6fa3;
+    color: #fff;
+}
+
+.pm-btn-primary:hover{
+    filter: brightness(0.95);
+}
+
+
+/* Select "Estado" más grande en la tabla */
+.pm-table td .pm-select{
+    min-width: 110px;   /* ancho */
+    height: 42px;       /* alto */
+    font-size: 15px;    /* texto */
+    padding: 8px 12px;  /* aire interno */
+    border-radius: 10px;
+}

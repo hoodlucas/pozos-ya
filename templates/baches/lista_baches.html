@@ -31,6 +31,8 @@
         <option value="alta" {% if severidad_actual == "alta" %}selected{% endif %}>Alta</option>
     </select>
 
+    <br>
+    <br>
     <button type="submit" style="margin-left: 10px;">Filtrar</button>
 
     <!-- Botón para limpiar filtros -->
@@ -115,42 +117,60 @@
 </script>
 
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <thead>
+<div class="pm-table-card">
+  <div class="pm-table-scroll">
+    <table class="pm-table">
+      <thead>
         <tr>
-            <th>Título</th>
-            <th>Ubicación</th>
-            <th>Barrio</th>
-            <th>Severidad</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th>Foto</th>
+          <th>Título</th>
+          <th>Ubicación</th>
+          <th>Barrio</th>
+          <th>Severidad</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Foto</th>
         </tr>
-    </thead>
-    <tbody>
-    {% for b in baches %}
-        <tr id="bache-row-{{ b.id }}">
-            <td>
+      </thead>
+
+      <tbody>
+        {% for b in baches %}
+          <tr id="bache-row-{{ b.id }}">
+            <td class="pm-col-title">
+              <div class="pm-title-cell">
                 <a href="{% url 'detalle_bache' b.id %}">{{ b.titulo }}</a>
                 {% if user.is_authenticated and b.vecino == user %}
-                    (tu reclamo)
+                  <span class="pm-muted">(tu reclamo)</span>
                 {% endif %}
+              </div>
             </td>
-            <td>{{ b.calle }} {{ b.altura }}</td>
-            <td>{{ b.barrio }}</td>
+
+            <td class="pm-col-ubi">
+              <div class="pm-ubi-cell">
+                {{ b.calle }} {{ b.altura }}
+              </div>
+            </td>
+
+            <td><span class="pm-muted">{{ b.barrio }}</span></td>
             <td>{{ b.get_severidad_display }}</td>
-            <td>{{ b.get_estado_display }}</td>
-            <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+
             <td>
-                {% if b.imagen %}
-                    <img src="{{ b.imagen.url }}" style="width:80px; height:auto; border-radius:4px;">
-                {% else %}
-                    -
-                {% endif %}
+              <span class="pm-pill">{{ b.get_estado_display }}</span>
             </td>
-        </tr>
-    {% endfor %}
-</tbody>
-</table>
+
+            <td class="pm-nowrap">{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+
+            <td>
+              {% if b.imagen %}
+                <img class="lb-thumb" src="{{ b.imagen.url }}" alt="Foto bache">
+              {% else %}
+                <span class="pm-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
 {% endblock %}

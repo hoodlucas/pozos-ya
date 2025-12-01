@@ -29,30 +29,60 @@
         </div>
 
         <nav>
-            <a href="{% url 'lista_baches' %}">Listado</a>
-            <a href="{% url 'crear_bache' %}">Reportar</a>
-
             {% if user.is_authenticated %}
                 {% if user.perfil and user.perfil.rol == "municipio" %}
+                    <a href="{% url 'lista_baches' %}">Listado</a>
                     <a href="{% url 'panel_municipio' %}" class="highlight">Panel</a>
+                    <a href="{% url 'logout' %}">Salir</a>
+                {% else %}
+                    <a href="{% url 'lista_baches' %}">Listado</a>
+                    <a href="{% url 'crear_bache' %}">Reportar</a>
+                    <a href="{% url 'mis_notificaciones' %}">
+                        Notificaciones {% if notifs_no_leidas %}<span class="badge">{{ notifs_no_leidas }}</span>{% endif %}
+                    </a>
+                    <a href="{% url 'mis_baches' %}">Mis reclamos</a>
+                    <a href="{% url 'logout' %}">Salir</a>
                 {% endif %}
-                
-                <a href="{% url 'mis_notificaciones' %}">
-                    Notificaciones {% if notifs_no_leidas %}<span class="badge">{{ notifs_no_leidas }}</span>{% endif %}
-                </a>
-                <a href="{% url 'mis_baches' %}">Mis reclamos</a>
-                <a href="{% url 'logout' %}">Salir</a>
             {% else %}
+                <a href="{% url 'lista_baches' %}">Listado</a>
+                <a href="{% url 'crear_bache' %}">Reportar</a>
                 <a href="{% url 'login' %}">Entrar</a>
-                <a href="{% url 'registro' %}">Registrarse</a>
             {% endif %}
         </nav>
     </div>
 </header>
 
 <main>
+    {% if messages %}
+    <div class="flash-wrap">
+        {% for message in messages %}
+        <div class="flash flash-{{ message.tags }}" data-flash>{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
 </main>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const flashes = document.querySelectorAll("[data-flash]");
+        flashes.forEach((el) => {
+        setTimeout(() => {
+            el.classList.add("is-hiding");
+            // lo removemos cuando termine la transición
+            setTimeout(() => el.remove(), 650);
+        }, 5000);
+        });
+    });
+</script>
+
+
+<footer class="site-footer">
+    <div class="site-footer__inner">
+        © {% now "Y" %} Lucas Hood. Todos los derechos reservados.
+    </div>
+</footer>
 
 </body>
 </html>

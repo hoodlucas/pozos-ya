@@ -21,6 +21,7 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from baches.views import CustomLoginView
+from baches.forms import CustomAuthForm # ¡IMPORTA TU NUEVO FORMULARIO!
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,9 +32,13 @@ urlpatterns = [
     path("mis-reclamos/", baches_views.mis_baches, name="mis_baches"),
     path("municipio/export/csv/", baches_views.exportar_baches_csv, name="exportar_baches_csv"),
     path("bache/<int:pk>/upvote/", baches_views.toggle_upvote, name="toggle_upvote"),
+    path("verificar/", baches_views.verificar_email, name="verificar_email"),
+    
+    path("recuperar/", baches_views.password_reset_request, name="password_reset_request"),
+    path("recuperar/confirmar/", baches_views.password_reset_confirm, name="password_reset_confirm"),
     
     # LOGIN / LOGOUT / REGISTRO
-    path("login/", CustomLoginView.as_view(), name="login"),   
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html', authentication_form=CustomAuthForm), name='login'),
     path('logout/', baches_views.logout_view, name='logout'),
     path("registro/", baches_views.registro, name="registro"),
     
