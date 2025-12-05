@@ -21,14 +21,19 @@
     <p><strong>Descripción:</strong> {{ bache.descripcion }}</p>
 {% endif %}
 
-{% if bache.imagen %}
-    <div style="margin-top: 12px;">
-        <img src="{{ bache.imagen.url }}" style="max-width: 600px; width: 100%; border-radius: 8px;">
-    </div>
-{% else %}
-    <p>No hay imagen cargada.</p>
+{% if bache.imagenes.all %}
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    {% for img in bache.imagenes.all %}
+      <img src="{{ img.imagen.url }}" style="width:160px; border-radius:10px;">
+    {% endfor %}
+  </div>
 {% endif %}
 
+{# opcional: si mantenés la imagen legacy #}
+{% if bache.imagen %}
+  <img src="{{ bache.imagen.url }}" style="width:160px; border-radius:10px;">
+{% endif %}
+<br>
 <hr>
 
 <p><strong>Estado:</strong> {{ bache.get_estado_display }}</p>
@@ -41,9 +46,7 @@
   <p><strong>Comentario del municipio:</strong> {{ bache.comentario_municipio }}</p>
 {% endif %}
 
-
 <hr>
-
 <h3>Historial de cambios</h3>
 
 {% if historial %}

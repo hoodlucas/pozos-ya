@@ -139,3 +139,18 @@
     padding: 8px 12px;  /* aire interno */
     border-radius: 10px;
 }
+
+
+
+.pm-card{
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.06);
+}
+
+.pm-card h3{
+    font-size: 16px;
+    font-weight: 700;
+}

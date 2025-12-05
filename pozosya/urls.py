@@ -34,6 +34,10 @@ urlpatterns = [
     path("bache/<int:pk>/upvote/", baches_views.toggle_upvote, name="toggle_upvote"),
     path("verificar/", baches_views.verificar_email, name="verificar_email"),
     
+    path("exportar/csv/", baches_views.exportar_baches_csv, name="exportar_baches_csv"),
+    path("exportar/excel/", baches_views.exportar_baches_excel, name="exportar_baches_excel"),
+    path("exportar/pdf/", baches_views.exportar_baches_pdf, name="exportar_baches_pdf"),
+        
     path("recuperar/", baches_views.password_reset_request, name="password_reset_request"),
     path("recuperar/confirmar/", baches_views.password_reset_confirm, name="password_reset_confirm"),
     

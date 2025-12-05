@@ -2,7 +2,7 @@ from django import forms
 from .models import Bache
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Perfil
+from .models import Perfil, Bache
 from django.contrib.auth.forms import AuthenticationForm
 
 BARRIOS_LOMAS = [
@@ -20,18 +20,35 @@ BARRIOS_LOMAS = [
     ("San Jose", "San Jose")
 ]
 
+class MultipleFileInput(forms.FileInput):
+    allow_multiple_selected = True
+
+class MultipleImageField(forms.ImageField):
+    def clean(self, data, initial=None):
+        # data puede venir como lista por el input multiple
+        if not data:
+            return []
+        if isinstance(data, (list, tuple)):
+            return [super().clean(d, initial) for d in data]
+        return [super().clean(data, initial)]
+
 class BacheForm(forms.ModelForm):
     barrio = forms.ChoiceField(choices=BARRIOS_LOMAS, required=False)
+
+    imagenes = MultipleImageField(
+        required=False,
+        widget=MultipleFileInput(attrs={"multiple": True}),
+    )
 
     class Meta:
         model = Bache
         fields = [
-            'titulo', 'descripcion', 'calle', 'altura',
-            'barrio', 'severidad', 'latitud', 'longitud', 'imagen',
+            "titulo", "descripcion", "calle", "altura",
+            "barrio", "severidad", "latitud", "longitud",
         ]
         widgets = {
-            'latitud': forms.HiddenInput(),
-            'longitud': forms.HiddenInput(),
+            "latitud": forms.HiddenInput(),
+            "longitud": forms.HiddenInput(),
         }
 
 

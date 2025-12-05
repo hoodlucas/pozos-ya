@@ -4,9 +4,60 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'baches/css/municipio.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
+
+<!-- GRÁFICO TORTA  -->
+<h3 style="margin:0 0 10px;">Baches por barrio</h3>
+<div class="pm-table-card" style="margin-bottom:16px;">
+
+  {% if por_barrio_labels %}
+    {{ por_barrio_labels|json_script:"barrios-labels" }}
+    {{ por_barrio_values|json_script:"barrios-values" }}
+
+    <div class="pm-chart-wrap">
+      <canvas id="barrioChart"></canvas>
+    </div>
+  {% else %}
+    <p class="pm-muted">No hay datos para graficar.</p>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+(function () {
+  const elLabels = document.getElementById("barrios-labels");
+  const elValues = document.getElementById("barrios-values");
+  const canvas = document.getElementById("barrioChart");
+  if (!elLabels || !elValues || !canvas) return;
+
+  const labels = JSON.parse(elLabels.textContent);
+  const values = JSON.parse(elValues.textContent);
+
+  const ctx = canvas.getContext("2d");
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [{ data: values }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" },
+        title: { display: false }
+      }
+    }
+  });
+})();
+</script>
+
+
+
 <!-- FORM ÚNICO PARA ACTUALIZAR EN MASA (POST) -->
 <div class="pm-wrapper">
   <h2 class="pm-title">Panel Municipio</h2>
@@ -154,12 +205,14 @@
       </div>
     </div>
   </form>
+
+<br>
+<h4>Exportar a: </h4>
+<a class="pm-btn" href="{% url 'exportar_baches_csv' %}?{{ request.GET.urlencode }}">CSV</a>
+<a class="pm-btn" href="{% url 'exportar_baches_excel' %}?{{ request.GET.urlencode }}">Excel</a>
+<a class="pm-btn" href="{% url 'exportar_baches_pdf' %}?{{ request.GET.urlencode }}">PDF</a>
+
+
 </div>
-
-
-
-<a href="{% url 'exportar_baches_csv' %}?{{ request.GET.urlencode }}">
-  Descargar CSV
-</a>
 
 {% endblock %}

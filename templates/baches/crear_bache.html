@@ -4,8 +4,8 @@
 {% block title %}Reportar bache - Pozos Ya{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,117 +20,153 @@
     <button type="submit">Guardar</button>
 </form>
 
+
 <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
 
 <script>
-  // 1. Configuración inicial del mapa
-  const map = L.map('map').setView([-34.76, -58.4], 18);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // Variable para guardar el polígono
-  let poligonoMunicipio = null;
-
-  // 2. Cargar GeoJSON de Lomas
-  const geoUrl = "{% static 'geo/lomas_de_zamora.geojson' %}";
-
-  fetch(geoUrl)
-    .then(r => r.json())
-    .then(data => {
-      // Dibujamos la línea roja
-      const limiteLayer = L.geoJSON(data, {
-        style: { color: "#d00", weight: 2, fillOpacity: 0.1 }
-      }).addTo(map);
-      
-      map.fitBounds(limiteLayer.getBounds());
-
-      // Guardamos la geometría para Turf
-      // Turf necesita el "Feature" individual, no toda la colección
-      if (data.type === "FeatureCollection" && data.features.length > 0) {
-          poligonoMunicipio = data.features[0]; 
-      } else {
-          poligonoMunicipio = data;
-      }
-      console.log("Límite cargado correctamente.");
-    })
-    .catch(err => console.error("Error cargando el mapa:", err));
-
-  let marker = null;
-
-  // 3. Función Click (LA PARTE IMPORTANTE)
-  async function onMapClick(e) {
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-
-    // --- VALIDACIÓN CON TURF ---
-    // Primero verificamos si Turf cargó
-    if (typeof turf === 'undefined') {
-        console.error("La librería Turf no cargó.");
-        alert("Error interno: No se pudo validar la ubicación. Recargá la página.");
-        return;
-    }
-
-    // Si ya tenemos el polígono, validamos
-    if (poligonoMunicipio) {
-        // Turf usa [longitud, latitud]
-        const punto = turf.point([lng, lat]);
-        const estaDentro = turf.booleanPointInPolygon(punto, poligonoMunicipio);
-
-        if (!estaDentro) {
-            alert("🚫 Zona incorrecta: El bache debe estar dentro de Lomas de Zamora.");
-            return; // ALTO: Si entra acá, la función muere y no pone el marcador.
+    // --- NUEVA FUNCIÓN PARA MOSTRAR MENSAJES DE ERROR EN CLIENTE (FLASH) ---
+    function displayClientError(message) {
+        // 1. Eliminamos cualquier mensaje anterior para evitar apilamiento
+        const oldAlert = document.querySelector('#client-flash-error');
+        if (oldAlert) {
+            oldAlert.remove();
         }
-    } else {
-        console.warn("El mapa de Lomas no terminó de cargar, validación omitida temporalmente.");
+
+        // 2. Creamos el elemento HTML (simulando un 'flash' de error)
+        const alertDiv = document.createElement('div');
+        alertDiv.id = 'client-flash-error';
+        // Asume que tienes clases CSS para 'alert' y 'alert-danger' (como Bootstrap)
+        alertDiv.className = 'alert alert-danger'; 
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.textContent = message;
+
+        // 3. Lo insertamos después del título
+        const h2 = document.querySelector('h2');
+        if (h2) {
+            h2.insertAdjacentElement('afterend', alertDiv);
+        }
+
+        // 4. Opcional: Ocultarlo automáticamente después de unos segundos
+        setTimeout(() => {
+            if (alertDiv) alertDiv.remove();
+        }, 5000); 
     }
-    // ---------------------------
+    // -----------------------------------------------------------------------
 
-    // Si llegamos acá, es válido: Ponemos el marcador
-    if (marker) {
-      marker.setLatLng(e.latlng);
-    } else {
-      marker = L.marker(e.latlng).addTo(map);
-    }
 
-    // Llenamos los inputs ocultos
-    const latInput = document.getElementById('id_latitud');
-    const lngInput = document.getElementById('id_longitud');
-    if (latInput) latInput.value = lat.toFixed(6);
-    if (lngInput) lngInput.value = lng.toFixed(6);
+    // 1. Configuración inicial del mapa
+    const map = L.map('map').setView([-34.76, -58.4], 18);
 
-    // Intentamos buscar la calle (Nominatim)
-    // Lo ponemos en try/catch para que si falla, NO rompa el programa
-    try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`;
-        
-        // Agregamos headers para intentar evitar el error 403
-        const response = await fetch(url, {
-            headers: { 'Accept-Language': 'es' } 
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            const calleInput = document.getElementById('id_calle');
-            const alturaInput = document.getElementById('id_altura');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-            if (data.address) {
-                const calle = data.address.road || data.address.pedestrian || '';
-                const altura = data.address.house_number || '';
-                if (calleInput) calleInput.value = calle;
-                if (alturaInput) alturaInput.value = altura;
+    // Variable para guardar el polígono
+    let poligonoMunicipio = null;
+
+    // 2. Cargar GeoJSON de Lomas
+    const geoUrl = "{% static 'geo/lomas_de_zamora.geojson' %}";
+
+    fetch(geoUrl)
+        .then(r => r.json())
+        .then(data => {
+            // Dibujamos la línea roja
+            const limiteLayer = L.geoJSON(data, {
+                style: { color: "#d00", weight: 2, fillOpacity: 0.1 }
+            }).addTo(map);
+            
+            map.fitBounds(limiteLayer.getBounds());
+
+            // Guardamos la geometría para Turf
+            // Turf necesita el "Feature" individual, no toda la colección
+            if (data.type === "FeatureCollection" && data.features.length > 0) {
+                poligonoMunicipio = data.features[0]; 
+            } else {
+                poligonoMunicipio = data;
+            }
+            console.log("Límite cargado correctamente.");
+        })
+        .catch(err => console.error("Error cargando el mapa:", err));
+
+    let marker = null;
+
+    // 3. Función Click (LA PARTE IMPORTANTE)
+    async function onMapClick(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        // --- VALIDACIÓN CON TURF ---
+        // Primero verificamos si Turf cargó
+        if (typeof turf === 'undefined') {
+            console.error("La librería Turf no cargó.");
+            displayClientError("Error interno: No se pudo validar la ubicación. Recargá la página."); // CAMBIO 1
+            return;
+        }
+
+        // Si ya tenemos el polígono, validamos
+        if (poligonoMunicipio) {
+            // Turf usa [longitud, latitud]
+            const punto = turf.point([lng, lat]);
+            const estaDentro = turf.booleanPointInPolygon(punto, poligonoMunicipio);
+
+            if (!estaDentro) {
+                displayClientError("🚫 Zona incorrecta: El bache debe estar dentro de Lomas de Zamora."); // CAMBIO 2
+                return; // ALTO: Si entra acá, la función muere y no pone el marcador.
             }
         } else {
-            console.warn("Nominatim bloqueó la petición (esto es normal en localhost).");
+            console.warn("El mapa de Lomas no terminó de cargar, validación omitida temporalmente.");
         }
-    } catch (err) {
-        console.log("No se pudo autocompletar la dirección:", err);
-        // No hacemos nada, el usuario puede escribir la dirección a mano
-    }
-  }
+        // ---------------------------
 
-  map.on('click', onMapClick);
+        // Si llegamos acá, es válido: Quitamos cualquier error anterior y ponemos el marcador
+        const oldAlert = document.querySelector('#client-flash-error');
+        if (oldAlert) {
+            oldAlert.remove();
+        }
+
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        // Llenamos los inputs ocultos
+        const latInput = document.getElementById('id_latitud');
+        const lngInput = document.getElementById('id_longitud');
+        if (latInput) latInput.value = lat.toFixed(6);
+        if (lngInput) lngInput.value = lng.toFixed(6);
+
+        // Intentamos buscar la calle (Nominatim)
+        // Lo ponemos en try/catch para que si falla, NO rompa el programa
+        try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`;
+            
+            // Agregamos headers para intentar evitar el error 403
+            const response = await fetch(url, {
+                headers: { 'Accept-Language': 'es' } 
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const calleInput = document.getElementById('id_calle');
+                const alturaInput = document.getElementById('id_altura');
+
+                if (data.address) {
+                    const calle = data.address.road || data.address.pedestrian || '';
+                    const altura = data.address.house_number || '';
+                    if (calleInput) calleInput.value = calle;
+                    if (alturaInput) alturaInput.value = altura;
+                }
+            } else {
+                console.warn("Nominatim bloqueó la petición (esto es normal en localhost).");
+            }
+        } catch (err) {
+            console.log("No se pudo autocompletar la dirección:", err);
+            // No hacemos nada, el usuario puede escribir la dirección a mano
+        }
+    }
+
+    map.on('click', onMapClick);
 </script>
 {% endblock %}

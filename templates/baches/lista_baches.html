@@ -160,11 +160,13 @@
             <td class="pm-nowrap">{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
 
             <td>
-              {% if b.imagen %}
-                <img class="lb-thumb" src="{{ b.imagen.url }}" alt="Foto bache">
-              {% else %}
-                <span class="pm-muted">-</span>
-              {% endif %}
+              {% with img=b.imagenes.first %}
+                {% if img %}
+                  <img class="lb-thumb" src="{{ img.imagen.url }}" alt="Foto bache">
+                {% else %}
+                  <span class="pm-muted">-</span>
+                {% endif %}
+              {% endwith %}
             </td>
           </tr>
         {% endfor %}

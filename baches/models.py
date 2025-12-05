@@ -43,6 +43,14 @@ class Bache(models.Model):
         return f"{self.titulo} - {self.calle} {self.altura}"
 
 
+class ImagenBache(models.Model):
+    bache = models.ForeignKey(Bache, related_name="imagenes", on_delete=models.CASCADE)
+    imagen = models.ImageField(upload_to="baches/")
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Imagen #{self.id} del bache {self.bache_id}"
+
 
 # HISTORIAL DE CADA POZO
 class HistorialBache(models.Model):
