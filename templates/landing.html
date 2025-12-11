@@ -1,0 +1,127 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'baches/css/styles.css' %}">
+    
+    <title>Pozos Ya | Plataforma Oficial de Reclamos Urbanos</title>
+</head>
+<body>
+
+<header>
+    <div class="header-wrap">
+        <div class="brand">
+            <a href="/" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px;">
+                <img src="{% static 'baches/img/logo.jpg' %}" alt="Logo de Lomas de Zamora" class="logo-lomas">
+                
+                <div class="brand-text-wrap">
+                    <h1>Pozos Ya</h1>
+                    <small>Reclamos en Lomas de Zamora</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}">Salir</a>
+            {% else %}
+                <a href="{% url 'login' %}">Entrar</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main class="landing-content">
+    <section class="hero-main-card">
+        
+        <img src="{% static 'baches/img/Palacio_Municipal_de_Lomas_de_Zamora (1).jpg' %}"
+                alt="Palacio Municipal de Lomas de Zamora" 
+                class="hero-image-top">
+        
+        <h1>Pozos Ya: Plataforma Integral de Gestión de Infraestructura Urbana</h1>
+        
+        <p>
+            Pozos Ya es una iniciativa desarrollada por un vecino de Lomas de Zamora, con el objetivo de acercar 
+            una herramienta simple, ordenada y efectiva para mejorar la comunicación entre la comunidad y el Municipio. 
+            La plataforma busca centralizar los reclamos vinculados a baches, roturas del asfalto y otras irregularidades 
+            en la vía pública, permitiendo registrarlos con ubicación precisa y evidencia fotográfica. La información que 
+            aportan los vecinos es clave: ayuda a detectar puntos críticos, dimensionar el alcance de los problemas y facilitar 
+            una respuesta más rápida y planificada. En definitiva, cada reporte suma a un mapa más claro de la situación real 
+            en calle, y colabora para mejorar la seguridad, la transitabilidad y el mantenimiento de nuestras arterias.
+        </p>
+
+        <div class="cta-container">
+            {% if user.is_authenticated %}
+                <a class="btn btn-primary" href="{% url 'crear_bache' %}">Reportar Nuevo Incidente</a>
+            {% else %}
+                <a class="btn btn-primary" href="{% url 'login' %}">Ingresar al Sistema</a>
+                <a class="btn btn-secondary" href="{% url 'registro' %}">Crear Cuenta</a>
+            {% endif %}
+        </div>
+        
+        <div class="info-section">
+            <h2>Quiénes somos y por qué nace Pozos Ya</h2>
+            <p>
+                Este proyecto surge de una necesidad concreta: muchos vecinos se encuentran con baches todos los días, 
+                pero no siempre cuentan con un canal práctico para reportarlos o hacer seguimiento. Desde un enfoque de 
+                estudiante y vecino comprometido con su ciudad, Pozos Ya fue pensado como un puente digital que transforma 
+                un reclamo aislado en información útil, organizada y accionable. Cada reporte se incorpora a una base de datos 
+                que permite visualizar qué ocurre, dónde ocurre y con qué frecuencia, generando evidencia verificable que puede 
+                servir para priorizar intervenciones. La idea central es colaborar: no reemplazar los canales existentes, sino sumar 
+                una herramienta que ordene el flujo de reclamos y aporte claridad para una gestión más cercana y transparente.
+            </p>
+        </div>
+
+        <div class="info-section">
+            <h2>Misión: facilitar el reporte y optimizar la gestión</h2>
+            <p>
+                La misión de Pozos Ya se apoya en dos pilares complementarios. Por un lado, simplificar al máximo el reporte ciudadano: 
+                que cualquier persona pueda cargar un incidente en pocos pasos, adjuntar fotos y marcar la ubicación exacta desde el 
+                celular o la computadora. Por otro lado, aportar valor a la gestión municipal mediante datos claros y comparables. 
+                A través de la clasificación por severidad y un sistema de apoyo vecinal (votos), la plataforma permite identificar qué 
+                reclamos concentran mayor impacto o preocupación, favoreciendo la priorización de tareas. Esto contribuye a mejorar la 
+                asignación de recursos, reducir tiempos de respuesta y orientar las cuadrillas hacia los puntos donde la intervención 
+                resulta más urgente para la seguridad y el tránsito.
+            </p>
+        </div>
+
+        <div class="info-section">
+            <h2>Visión de Ciudad Inteligente y Mejora Continua</h2>
+            <p>
+                La visión de Pozos Ya es acompañar el camino hacia una Lomas de Zamora más moderna, donde la tecnología y la participación 
+                vecinal se conviertan en aliados de la mejora urbana. A mediano plazo, el objetivo es que la información acumulada permita 
+                detectar patrones: calles con desgaste recurrente, zonas que requieren mantenimiento preventivo, o reparaciones que 
+                necesitan seguimiento. Con datos históricos, la gestión puede pasar de reaccionar ante emergencias a planificar con 
+                anticipación, fortaleciendo la calidad y durabilidad de las obras. Pozos Ya apunta a ser parte de esa evolución: un proyecto 
+                simple, cercano y colaborativo, creado desde el compromiso de un estudiante con su municipio, pero con la seriedad suficiente 
+                como para aportar valor real y medible a la vida cotidiana de los vecinos.
+            </p>
+        </div>
+        
+    </section>
+</main>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const flashes = document.querySelectorAll("[data-flash]");
+        flashes.forEach((el) => {
+        setTimeout(() => {
+            el.classList.add("is-hiding");
+            setTimeout(() => el.remove(), 650);
+        }, 5000);
+        });
+    });
+</script>
+
+
+<footer class="site-footer">
+    <div class="site-footer__inner">
+        © {% now "Y" %} Lucas Hood. Todos los derechos reservados.
+    </div>
+</footer>
+
+</body>
+</html>

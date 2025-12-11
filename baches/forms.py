@@ -136,3 +136,42 @@ class PasswordResetConfirmForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Las contraseñas no coinciden.")
         return cleaned
+
+
+# MIS DATOS PERSONALES
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email"]
+        labels = {
+            "first_name": "Nombre",
+            "last_name": "Apellido",
+            "email": "Email",
+        }
+    
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Ese email ya está en uso por otro usuario.")
+        return email
+
+
+class PerfilUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Perfil
+        fields = ["dni", "fecha_nacimiento", "telefono", "domicilio"]
+        labels = {
+            "dni": "DNI",
+            "fecha_nacimiento": "Fecha de nacimiento",
+            "telefono": "Teléfono",
+            "domicilio": "Domicilio",
+        }
+        widgets = {
+            "fecha_nacimiento": forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def clean_dni(self):
+        dni = (self.cleaned_data.get("dni") or "").strip()
+        if dni and (not dni.isdigit() or len(dni) < 7 or len(dni) > 9):
+            raise forms.ValidationError("DNI inválido. Usá solo números (7 a 9 dígitos).")
+        return dni

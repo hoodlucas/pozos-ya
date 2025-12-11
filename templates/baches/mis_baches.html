@@ -92,9 +92,11 @@
     });
 </script>
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-        <tr>
+<div class="pm-table-card">
+    <div class="pm-table-scroll">
+        <table class="pm-table">
+        <thead>
+            <tr>
             <th>Título</th>
             <th>Ubicación</th>
             <th>Barrio</th>
@@ -102,34 +104,55 @@
             <th>Estado</th>
             <th>Fecha</th>
             <th>Foto</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for b in baches %}
-        <tr id="bache-row-{{ b.id }}">
-            <td>
-                <a href="{% url 'detalle_bache' b.id %}">{{ b.titulo }}</a>
-                (tu reclamo)
-            </td>
-            <td>{{ b.calle }} {{ b.altura }}</td>
-            <td>{{ b.barrio }}</td>
-            <td>{{ b.get_severidad_display }}</td>
-            <td>{{ b.get_estado_display }}</td>
-            <td>{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
-            <td>
-                {% if b.imagen %}
-                    <img src="{{ b.imagen.url }}" style="width:80px; height:auto; border-radius:4px;">
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td colspan="7">Todavía no reportaste ningún bache.</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for b in baches %}
+            <tr id="bache-row-{{ b.id }}">
+                <td class="pm-col-title">
+                <div class="pm-title-cell">
+                    <a href="{% url 'detalle_bache' b.id %}">{{ b.titulo }}</a>
+                    {% if user.is_authenticated and b.vecino == user %}
+                    <span class="pm-muted">(tu reclamo)</span>
+                    {% endif %}
+                </div>
+                </td>
+
+                <td class="pm-col-ubi">
+                <div class="pm-ubi-cell">
+                    {{ b.calle }} {{ b.altura }}
+                </div>
+                </td>
+
+                <td><span class="pm-muted">{{ b.barrio }}</span></td>
+                <td>{{ b.get_severidad_display }}</td>
+
+                <td>
+                <span class="pm-pill">{{ b.get_estado_display }}</span>
+                </td>
+
+                <td class="pm-nowrap">{{ b.fecha_creacion|date:"d/m/Y H:i" }}</td>
+
+                <td>
+                {% with img=b.imagenes.first %}
+                    {% if img %}
+                    <img class="lb-thumb" src="{{ img.imagen.url }}" alt="Foto bache">
+                    {% else %}
+                    <span class="pm-muted">-</span>
+                    {% endif %}
+                {% endwith %}
+                </td>
+            </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">Todavía no reportaste ningún bache.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</div>
+
 
 {% endblock %}

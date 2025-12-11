@@ -1,0 +1,73 @@
+
+/* Estilos específicos para esta Landing Page, basados en las variables existentes */
+.landing-wrapper {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+
+.hero-card {
+    background: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 16px;
+    border: 2px solid #226899;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.hero-card h1 {
+    font-size: 38px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #226899; /* Usando el azul del header para un look más oficial */
+    font-weight: 900;
+}
+
+.hero-card p {
+    font-size: 18px;
+    color: var(--gris-texto);
+    max-width: 600px;
+    margin: 0 auto 25px auto;
+}
+
+.cta-actions {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cta-actions .btn {
+    width: 180px; /* Ancho fijo para botones */
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.info-card h2 {
+    color: #185f92;
+    font-size: 20px;
+    margin-top: 0;
+    border-bottom: 2px solid var(--borde);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* Media query para móviles */
+@media (max-width: 600px) {
+    .cta-actions {
+        flex-direction: column;
+    }
+    .cta-actions .btn {
+        width: 100%;
+    }
+}
+
+
+
+
+

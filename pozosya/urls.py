@@ -25,7 +25,13 @@ from baches.forms import CustomAuthForm # ¡IMPORTA TU NUEVO FORMULARIO!
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', baches_views.lista_baches, name='lista_baches'), # Principal
+    
+    # HOME
+    path("", baches_views.landing, name="home"),
+    
+    # LISTA DE BACHES
+    path("listado/", baches_views.lista_baches, name="lista_baches"),
+    
     path('nuevo/', baches_views.crear_bache, name='crear_bache'),
     path('municipio/', baches_views.panel_municipio, name='panel_municipio'),
     path("bache/<int:pk>/", baches_views.detalle_bache, name="detalle_bache"),
@@ -33,6 +39,7 @@ urlpatterns = [
     path("municipio/export/csv/", baches_views.exportar_baches_csv, name="exportar_baches_csv"),
     path("bache/<int:pk>/upvote/", baches_views.toggle_upvote, name="toggle_upvote"),
     path("verificar/", baches_views.verificar_email, name="verificar_email"),
+    path("perfil/", baches_views.editar_perfil, name="editar_perfil"),
     
     path("exportar/csv/", baches_views.exportar_baches_csv, name="exportar_baches_csv"),
     path("exportar/excel/", baches_views.exportar_baches_excel, name="exportar_baches_excel"),

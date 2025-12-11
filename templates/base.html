@@ -41,6 +41,7 @@
                         Notificaciones {% if notifs_no_leidas %}<span class="badge">{{ notifs_no_leidas }}</span>{% endif %}
                     </a>
                     <a href="{% url 'mis_baches' %}">Mis reclamos</a>
+                    <a href="{% url 'editar_perfil' %}">Mi perfil</a>
                     <a href="{% url 'logout' %}">Salir</a>
                 {% endif %}
             {% else %}
