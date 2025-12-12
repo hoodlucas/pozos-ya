@@ -1,5 +1,7 @@
 <img width="1144" height="631" alt="image" src="https://github.com/user-attachments/assets/cf02cd72-7f45-4b6c-b92d-3aaae9e9e609" />
 
+https://hoodlucas.pythonanywhere.com/nuevo/
+Este es el link al proyecto, si te está caído pueden descargar el proyecto!
 
 Pozos Ya   
 Plataforma Integral de Gestión de Baches en Lomas de Zamora
